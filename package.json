@@ -1,0 +1,8 @@
+{
+  "name": "projeto",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/VeronicaMarchiori/Projeto-Integrador.git",
+  "author": "Veronica <veronicamarchiorir@gmail.com>",
+  "license": "MIT"
+}
