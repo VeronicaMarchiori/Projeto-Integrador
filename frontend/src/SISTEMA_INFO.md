@@ -1,13 +1,13 @@
 # VigiaSystem - Sistema de Gestão de Rondas
 
-## 📋 Visão Geral
+## Visão Geral
 Sistema completo de gestão de rondas de vigilância com design moderno nas cores **azul**, **vermelho** e **branco**.
 
-## 🔐 Sistema de Permissões
+## Sistema de Permissões
 
 ### Níveis de Acesso
 
-#### 👑 Administrador (Vermelho)
+#### Administrador (Vermelho)
 - **Cadastro completo de rotas** com horários específicos
 - Gerenciamento de estabelecimentos
 - Gerenciamento de funcionários
@@ -20,15 +20,15 @@ Sistema completo de gestão de rondas de vigilância com design moderno nas core
 - Monitoramento de rondas em andamento
 - Pode cadastrar rotas (permissão compartilhada com admin)
 
-#### 🛡️ Vigilante (Verde)
+#### Vigilante (Verde)
 - **Apenas visualiza** rotas cadastradas pelo admin
 - **Executa rondas** nos horários permitidos
 - Acesso restrito às funções operacionais
 - Não pode cadastrar ou editar rotas
 
-## ✅ Funcionalidades Implementadas
+## Funcionalidades Implementadas
 
-### 1. 🏢 Cadastro de Estabelecimentos
+### 1. Cadastro de Estabelecimentos
 - **Localização**: Menu lateral > Estabelecimentos
 - **Funcionalidades**:
   - Cadastro de novos estabelecimentos
@@ -36,14 +36,14 @@ Sistema completo de gestão de rondas de vigilância com design moderno nas core
   - Edição e exclusão de estabelecimentos
   - Informações: Nome, endereço, telefone, responsável
 
-### 2. 🗺️ Cadastro de Rotas (ADMIN/SUPERVISOR APENAS)
+### 2. Cadastro de Rotas (ADMIN/SUPERVISOR APENAS)
 - **Localização**: Menu lateral > Rotas
 - **Permissão**: Apenas Administradores e Supervisores
 - **Funcionalidades**:
   - Criação de rotas personalizadas
   - Seleção de estabelecimento
   - Tipo de ronda (Interna, Externa, Supervisão)
-  - **⏰ Configuração de Horários**:
+  - **Configuração de Horários**:
     - Horário de início (HH:MM)
     - Horário de término (HH:MM)
     - Dias da semana permitidos (Segunda a Domingo)
@@ -64,9 +64,9 @@ Sistema completo de gestão de rondas de vigilância com design moderno nas core
   - Cadastro completo de funcionários
   - Informações: Nome, email, CPF, telefone, função
   - **Tipos de Função**:
-    - 👑 Administrador (vermelho)
-    - 🔍 Supervisor (azul)
-    - 🛡️ Vigilante (verde)
+    - Administrador (vermelho)
+    -  Supervisor (azul)
+    -  Vigilante (verde)
   - **Estatísticas**:
     - Total de funcionários
     - Contagem por função
@@ -77,18 +77,18 @@ Sistema completo de gestão de rondas de vigilância com design moderno nas core
   - Cards com código de cores por função
   - Edição e exclusão de funcionários
 
-### 4. 🚶 Registro de Rondas (Percurso do Vigia)
+### 4.  Registro de Rondas (Percurso do Vigia)
 - **Localização**: Menu lateral > Rondas
 - **Acesso**: Todos os usuários
 - **Funcionalidades**:
-  - **🕐 Validação de Horário em Tempo Real**:
+  - ** Validação de Horário em Tempo Real**:
     - Display do horário e data atual
     - Validação automática antes de iniciar
     - Rotas bloqueadas fora do horário permitido
     - Verificação de dia da semana
   - **Status Visual de Rotas**:
-    - ✅ Verde: Disponível no horário atual
-    - ❌ Vermelho: Fora do horário ou dia não permitido
+    -  Verde: Disponível no horário atual
+    -  Vermelho: Fora do horário ou dia não permitido
     - Mensagens explicativas de bloqueio
   - **Durante a ronda**:
     - Visualização do progresso em tempo real
@@ -110,7 +110,7 @@ Sistema completo de gestão de rondas de vigilância com design moderno nas core
   - Mensagens claras de bloqueio com horários permitidos
   - Validação de dia da semana
 
-### 5. 📊 Relatórios das Rondas
+### 5.  Relatórios das Rondas
 - **Localização**: Menu lateral > Relatórios
 - **Funcionalidades**:
   - **Filtros**:
@@ -136,7 +136,7 @@ Sistema completo de gestão de rondas de vigilância com design moderno nas core
     - Exportar para CSV
     - Dados completos para análise
 
-## 🎯 Fluxo de Trabalho
+##  Fluxo de Trabalho
 
 ### Configuração Inicial (Admin)
 1. Admin faz login no sistema
@@ -155,8 +155,8 @@ Sistema completo de gestão de rondas de vigilância com design moderno nas core
 2. Vai para menu "Rondas"
 3. **Visualiza horário atual** no topo da tela
 4. Vê lista de rotas com indicadores:
-   - ✅ **Verde**: Rota disponível agora
-   - ❌ **Vermelho**: Fora do horário ou dia bloqueado
+   -  **Verde**: Rota disponível agora
+   -  **Vermelho**: Fora do horário ou dia bloqueado
 5. Clica em rota disponível para iniciar
 6. **Sistema valida**:
    - ✓ Horário está dentro do permitido?
@@ -172,7 +172,7 @@ Sistema completo de gestão de rondas de vigilância com design moderno nas core
 3. Visualiza estatísticas
 4. Exporta dados para análise
 
-## 🎨 Design System
+##  Design System
 
 ### Cores Principais
 - **🔵 Azul (#2563eb)**: Navegação, botões primários, elementos principais
@@ -187,14 +187,14 @@ Sistema completo de gestão de rondas de vigilância com design moderno nas core
 - **Botão Emergência**: Vermelho com animação pulse
 - **Status**: Verde (concluído), Amarelo (pendente), Vermelho (emergência)
 
-## 🔐 Sistema de Autenticação
+##  Sistema de Autenticação
 - Login com email e senha
 - Cadastro de novos usuários
 - Seleção de função (Admin, Supervisor, Vigilante)
 - Design com gradiente azul
 - Logo centralizado
 
-## 📱 Interface Principal (Dashboard)
+##  Interface Principal (Dashboard)
 
 ### Sidebar
 - Logo do sistema (Shield icon)
@@ -225,7 +225,7 @@ Sistema completo de gestão de rondas de vigilância com design moderno nas core
   - Abrir Chat
   - Gerar Relatório
 
-## 🚨 Sistema de Ocorrências
+##  Sistema de Ocorrências
 - Botão de emergência vermelho com animação
 - Registro de ocorrências com:
   - Título e descrição
@@ -234,33 +234,33 @@ Sistema completo de gestão de rondas de vigilância com design moderno nas core
   - Status (Aberta, Em Investigação, Resolvida)
 - Cards com destaque visual para emergências
 
-## 💬 Chat Interno
+##  Chat Interno
 - Sistema de mensagens entre funcionários
 - Interface moderna de chat
 - (Funcionalidade em desenvolvimento)
 
-## 🌐 Modo Offline
+##  Modo Offline
 - Sistema funciona sem conexão à internet
 - Dados armazenados localmente
 - Sincronização automática quando voltar online
 - Indicadores visuais de status de conexão
 - Fila de ações pendentes
 
-## 📱 Responsividade
+##  Responsividade
 - Design mobile-first
 - Sidebar colapsável em dispositivos móveis
 - Grid responsivo em todas as telas
 - Overlay em mobile para sidebar
 - Cards adaptáveis
 
-## 🔧 Tecnologias Utilizadas
+##  Tecnologias Utilizadas
 - React + TypeScript
 - Tailwind CSS v4
 - Lucide React (ícones)
 - Supabase (backend - em configuração)
 - shadcn/ui (componentes)
 
-## 📝 Próximos Passos Sugeridos
+##  Próximos Passos Sugeridos
 1. Implementar backend com Supabase Edge Functions
 2. Conectar banco de dados PostgreSQL
 3. Adicionar notificações em tempo real
@@ -272,7 +272,7 @@ Sistema completo de gestão de rondas de vigilância com design moderno nas core
 9. Adicionar upload de imagens para Supabase Storage
 10. Criar sistema de notificações push para emergências
 
-## 🎯 Conformidade LGPD
+##  Conformidade LGPD
 - Sistema preparado para armazenamento seguro de dados
 - Campos de CPF e informações pessoais protegidos
 - Controle de acesso por função
