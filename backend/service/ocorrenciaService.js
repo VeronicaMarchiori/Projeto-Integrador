@@ -1,130 +1,97 @@
-const ocorrenciaRepository = require("../repositories/ocorrenciaRepository");
+const ocorrenciaRepository = require("../repositories/ocorrenciaRepositories");
 
-// Função para retornar todos os Ocorrencia
-const retornaTodasOcorrencia = async (req, res) => {
-	try {
-		const ocorrencia = await ocorrenciaRepository.obterTodosOcorrencia();
-		res.status(200).json({ ocorrencia: ocorrencia });
-	} catch (error) {
-		console.log("Erro ao buscar Ocorrencia:", error);
-		res.sendStatus(500);
-	}
+// Função para retornar todas as ocorrências
+const retornaTodasOcorrencias = async (req, res) => {
+  try {
+    const ocorrencias = await ocorrenciaRepository.obterTodasOcorrencias();
+    res.status(200).json({ ocorrencias: ocorrencias });
+  } catch (error) {
+    console.log("Erro ao buscar ocorrências:", error);
+    res.sendStatus(500);
+  }
 };
 
-// Função para retornar todos os Ocorrencia de um Percurso
-const retornaOcorrenciaPorPercurso = async (req, res) => {
-	try {
-		const idPercurso = parseInt(req.params.idPercurso);
-		const ocorrencia = await ocorrenciaRepository.obterOcorrenciaPorIdPercurso(idPercurso);
-		res.status(200).json({ ocorrencia: ocorrencia });
-	} catch (error) {
-		console.log("Erro ao buscar Ocorrencia:", error);
-		res.sendStatus(500);
-	}
-};
-
-// Função para criar um novo Ocorrencia
-const criarOcorrencia = async (req, res) => {
-	const {id,tipo, descricao, latitude, longitude, sos, idPercurso, Hora, data} = req.body;
-	try {
-		if (!id || !descricao || !idPercurso) {
-			return res
-				.status(400)
-				.json({
-					message: "ID, descrição e ID do Percurso são obrigatórios.",
-				});
-		}
-
-		const ocorrencia = await ocorrenciaRepository.criarOcorrencia({
-			id,
-            tipo, 
-            descricao, 
-            latitude, 
-            longitude, 
-            sos, 
-            idPercurso, 
-            Hora, 
-            data,
-		});
-		res.status(201).json(ocorrencia);
-	} catch (error) {
-		console.log("Erro ao criar Ocorrencia:", error);
-		res.sendStatus(500);
-	}
-};
-
-// Função para atualizar um ocorrencia
-const atualizaOcorrencia = async (req, res) => {
-	const { tipo, descricao, latitude, longitude, sos, idPercurso, Hora, data } = req.body;
-	const id = parseInt(req.params.id);
-	try {
-		const ocorrenciaAtualizado = await ocorrenciaRepository.atualizarOcorrencia({
-			id,
-            tipo, 
-            descricao, 
-            latitude, 
-            longitude, 
-            sos, 
-            idPercurso, 
-            Hora, 
-            data,
-		});
-
-		if (ocorrenciaAtualizado) {
-			res.status(200).json(ocorrenciaAtualizado);
-		} else {
-			res.status(404).json({ message: "ocorrencia não encontrado" });
-		}
-	} catch (error) {
-		console.log("Erro ao atualizar ocorrencia:", error);
-		res.sendStatus(500);
-	}
-};
-
-// Função para deletar um ocorrencia
-const deletaOcorrencia = async (req, res) => {
-	try {
-		const id = parseInt(req.params.id);
-		const ocorrenciaRemovido = await ocorrenciaRepository.deletarOcorrencia({ id });
-
-		if (ocorrenciaRemovido) {
-			res.status(200).json({
-				message: "ocorrencia removido com sucesso.",
-				ocorrencia: ocorrenciaRemovido,
-			});
-		} else {
-			res.status(404).json({ message: "ocorrencia não encontrado" });
-		}
-	} catch (error) {
-		console.error("Erro ao deletar ocorrencia:", error);
-		res.status(500).json({ message: "Erro ao deletar ocorrencia" });
-	}
-};
-
-// Função para buscar ocorrencia por ID
+// Função para retornar ocorrência por ID
 const retornaOcorrenciaPorId = async (req, res) => {
-	try {
-		const id = parseInt(req.params.id);
-		const ocorrencia = await ocorrenciaRepository.obterOcorrenciaPorId({
-			id,
-		});
+  const idOcorrencia = parseInt(req.params.id);
+  
+  try {
+    const ocorrencia = await ocorrenciaRepository.obterOcorrenciaPorId(idOcorrencia);
+    
+    if (!ocorrencia) {
+      res.status(404).json({ message: "Ocorrência não encontrada" });
+    } else {
+      res.status(200).json(ocorrencia);
+    }
+  } catch (error) {
+    console.log("Erro ao buscar ocorrência:", error);
+    res.sendStatus(500);
+  }
+};
 
-		if (ocorrencia) {
-			res.status(200).json(ocorrencia);
-		} else {
-			res.status(404).json({ message: "ocorrencia não encontrado." });
-		}
-	} catch (error) {
-		console.log("Erro ao buscar ocorrencia:", error);
-		res.sendStatus(500);
-	}
+// Função para criar uma ocorrência
+const criaOcorrencia = async (req, res) => {
+  const ocorrenciaData = req.body;
+  
+  try {
+    // Adicionar data e hora atuais se não fornecidas
+    if (!ocorrenciaData.data) {
+      ocorrenciaData.data = new Date().toISOString().split("T")[0];
+    }
+    
+    if (!ocorrenciaData.hora) {
+      ocorrenciaData.hora = new Date().toISOString().split("T")[1].split(".")[0];
+    }
+    
+    const ocorrenciaCriada = await ocorrenciaRepository.criaOcorrencia(ocorrenciaData);
+    res.status(201).json(ocorrenciaCriada);
+  } catch (error) {
+    console.log("Erro ao criar ocorrência:", error);
+    res.sendStatus(500);
+  }
+};
+
+// Função para atualizar uma ocorrência
+const atualizaOcorrencia = async (req, res) => {
+  const idOcorrencia = parseInt(req.params.id);
+  const ocorrenciaData = req.body;
+  
+  try {
+    const ocorrenciaAtualizada = await ocorrenciaRepository.atualizaOcorrencia(idOcorrencia, ocorrenciaData);
+    
+    if (!ocorrenciaAtualizada) {
+      res.status(404).json({ message: "Ocorrência não encontrada" });
+    } else {
+      res.status(200).json(ocorrenciaAtualizada);
+    }
+  } catch (error) {
+    console.log("Erro ao atualizar ocorrência:", error);
+    res.sendStatus(500);
+  }
+};
+
+// Função para deletar uma ocorrência
+const deletaOcorrencia = async (req, res) => {
+  const idOcorrencia = parseInt(req.params.id);
+  
+  try {
+    const ocorrenciaDeletada = await ocorrenciaRepository.deletaOcorrencia(idOcorrencia);
+    
+    if (!ocorrenciaDeletada) {
+      res.status(404).json({ message: "Ocorrência não encontrada" });
+    } else {
+      res.status(200).json({ message: "Ocorrência deletada com sucesso" });
+    }
+  } catch (error) {
+    console.log("Erro ao deletar ocorrência:", error);
+    res.sendStatus(500);
+  }
 };
 
 module.exports = {
-	retornaTodasOcorrencia,
-	retornaOcorrenciaPorPercurso,
-	criarOcorrencia,
-	atualizaOcorrencia,
-	deletaOcorrencia,
-	retornaOcorrenciaPorId,
+  retornaTodasOcorrencias,
+  retornaOcorrenciaPorId,
+  criaOcorrencia,
+  atualizaOcorrencia,
+  deletaOcorrencia,
 };

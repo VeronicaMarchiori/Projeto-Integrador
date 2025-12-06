@@ -1,51 +1,62 @@
 "use strict";
 
-module.exports = (sequelize, DataTypes) => {
-	const Percurso = sequelize.define(
-		"Percurso",
-		{
-            id: {
-				type: DataTypes.INTEGER,
-				primaryKey: true,
-                autoIncrement: true
-			},
-			dataInicia: DataTypes.DATE,
-            dataFim: DataTypes.DATE,
-            kmPercorrido: DataTypes.DECIMAL(10,2),
-            observacoes: DataTypes.STRING,
-            idRonda: {
-				type: DataTypes.INTEGER,
-				references: {
-					model: "ronda",
-					key: "id",
-				},
-			},
+const { DataTypes } = require("sequelize");
 
-		},
-		{
-			sequelize,
-			tableName: "percurso",
-			schema: "public",
-			freezeTableName: true,
-			timestamps: false,
-		},
-	);
+module.exports = (sequelize) => {
+  const Percurso = sequelize.define(
+    "Percurso",
+    {
+      idPercurso: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      distancia: {
+        type: DataTypes.FLOAT,
+      },
+      dataFim: {
+        type: DataTypes.STRING,
+      },
+      kmPercorrido: {
+        type: DataTypes.FLOAT,
+      },
+      observacoes: {
+        type: DataTypes.TEXT,
+      },
+      fk_Ronda_idRonda: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: "Ronda",
+          key: "idRonda",
+        },
+      },
+    },
+    {
+      tableName: "Percurso",
+      timestamps: false,
+    }
+  );
 
-	Percurso.associate = function (models)  {
-		Percurso.belongsTo(models.Ronda, {
-			foreignKey: "idRonda",
-			sourceKey: "id",
-		});
-        Percurso.hasMany(models.Ocorencia, {
-			foreignKey: "idPercurso",
-			sourceKey: "id",
-		});
-		Percurso.hasMany(models.realizaPercurso, {
-			foreignKey: "idPercurso",
-			sourceKey: "id",
-		});
+  Percurso.associate = function (models) {
+    // Percurso -> Ronda (N:1)
+    Percurso.belongsTo(models.Ronda, {
+      foreignKey: "fk_Ronda_idRonda",
+    });
 
-	};
+    // Percurso <-> Vigia (N:N)
+    Percurso.belongsToMany(models.Vigia, {
+      through: "realizaPercurso",
+      foreignKey: "fk_Percurso_idPercurso",
+      otherKey: "fk_Vigia_fk_Usuario_idUsuario",
+      timestamps: false,
+    });
 
-	return Percurso;
+    // Percurso -> Ocorrencia (1:N)
+    Percurso.hasMany(models.Ocorrencia, {
+      foreignKey: "fk_Percurso_idPercurso",
+    });
+  };
+
+  return Percurso;
 };

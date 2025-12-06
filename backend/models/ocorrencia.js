@@ -1,46 +1,56 @@
 "use strict";
 
-module.exports = (sequelize, DataTypes) => {
-	const Ocorrencia = sequelize.define(
-		"Ocorrencia",
-		{
-            id: {
-				type: DataTypes.INTEGER,
-				primaryKey: true,
-                autoIncrement: true
-			},
-			tipo: DataTypes.STRING,
-            descricao: DataTypes.STRING,
-            dataO: DataTypes.DATEONLY,
-            Hora: DataTypes.TIME,
-            latitude: DataTypes.DECIMAL(10,7),
-            longitude: DataTypes.DECIMAL(10,7),
-            sos: DataTypes.BOOLEAN,
-            idPercurso: {
-				type: DataTypes.INTEGER,
-				references: {
-					model: "percurso",
-					key: "id",
-				},
-			},
+const { DataTypes } = require("sequelize");
 
+module.exports = (sequelize) => {
+  const Ocorrencia = sequelize.define(
+    "Ocorrencia",
+    {
+      idOcorrencia: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      tipo: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      descricao: {
+        type: DataTypes.TEXT,
+      },
+      data: {
+        type: DataTypes.STRING,
+      },
+      hora: {
+        type: DataTypes.STRING,
+      },
+      latitude: {
+        type: DataTypes.FLOAT,
+      },
+      longitude: {
+        type: DataTypes.FLOAT,
+      },
+      fk_Percurso_idPercurso: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: "Percurso",
+          key: "idPercurso",
+        },
+      },
+    },
+    {
+      tableName: "Ocorrencia",
+      timestamps: false,
+    }
+  );
 
-		},
-		{
-			sequelize,
-			tableName: "ocorrencia",
-			schema: "public",
-			freezeTableName: true,
-			timestamps: false,
-		},
-	);
+  Ocorrencia.associate = function (models) {
+    // Ocorrencia -> Percurso (N:1)
+    Ocorrencia.belongsTo(models.Percurso, {
+      foreignKey: "fk_Percurso_idPercurso",
+    });
+  };
 
-	Ocorrencia.associate = function (models)  {
-		Mensagem.belongsTo(models.Percurso, {
-			foreignKey: "idPercurso",
-			sourceKey: "id",
-		});
-	};
-
-	return Ocorrencia;
+  return Ocorrencia;
 };

@@ -1,36 +1,48 @@
 "use strict";
 
-module.exports = (sequelize, DataTypes) => {
-	const Empresa = sequelize.define(
-		"Empresa",
-		{
-            id: {
-				type: DataTypes.INTEGER,
-				primaryKey: true,
-                autoIncrement: true 
-			},
-			nome: DataTypes.STRING,
-            cnpj: DataTypes.STRING,
-            endereco: DataTypes.STRING,
-            telefone: DataTypes.STRING,
-            email: DataTypes.STRING,
-		
-		},
-		{
-			sequelize,
-			tableName: "empresa",
-			schema: "public",
-			freezeTableName: true,
-			timestamps: false,
-		},
-	);
+const { DataTypes } = require("sequelize");
 
-	Empresa.associate = function (models)  {
-		Empresa.hasMany(models.Ronda, {
-			foreignKey: "idRonda",
-			sourceKey: "id",
-		});
-	};
+module.exports = (sequelize) => {
+  const Empresa = sequelize.define(
+    "Empresa",
+    {
+      idEmpresa: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      nome: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      cnpj: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+      },
+      endereco: {
+        type: DataTypes.STRING,
+      },
+      telefone: {
+        type: DataTypes.STRING,
+      },
+      email: {
+        type: DataTypes.STRING,
+      },
+    },
+    {
+      tableName: "Empresa",
+      timestamps: false,
+    }
+  );
 
-	return Empresa;
+  Empresa.associate = function (models) {
+    // Empresa -> Ronda (1:N)
+    Empresa.hasMany(models.Ronda, {
+      foreignKey: "fk_Empresa_idEmpresa",
+      onDelete: "CASCADE",
+    });
+  };
+
+  return Empresa;
 };

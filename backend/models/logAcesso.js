@@ -1,42 +1,52 @@
 "use strict";
 
-module.exports = (sequelize, DataTypes) => {
-	const LogAcesso = sequelize.define(
-		"LogAcesso",
-		{
-            id: {
-				type: DataTypes.INTEGER,
-				primaryKey: true,
-                autoIncrement: true 
-			},
-			dataL: DataTypes.DATEONLY,
-            hora: DataTypes.TIME,
-            sucesso: DataTypes.BOOLEAN,
-            ip: DataTypes.STRING,
-            idUsuario: {
-				type: DataTypes.INTEGER,
-				references: {
-					model: "Usuario",
-					key: "id",
-				},
-			},
-		
-		},
-		{
-			sequelize,
-			tableName: "LogAcesso",
-			schema: "public",
-			freezeTableName: true,
-			timestamps: false,
-		},
-	);
+const { DataTypes } = require("sequelize");
 
-	LogAcesso.associate = function (models)  {
-		LogAcesso.belongsTo(models.Usuario, {
-			foreignKey: "idUsuario",
-			sourceKey: "id",
-		});
-	};
+module.exports = (sequelize) => {
+  const LogAcesso = sequelize.define(
+    "LogAcesso",
+    {
+      idLogA: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      data: {
+        type: DataTypes.DATEONLY,
+        defaultValue: DataTypes.NOW,
+      },
+      sucesso: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+      },
+      ip: {
+        type: DataTypes.STRING,
+      },
+      hora: {
+        type: DataTypes.TIME,
+        defaultValue: DataTypes.NOW,
+      },
+      fk_Usuario_idUsuario: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: "Usuario",
+          key: "idUsuario",
+        },
+      },
+    },
+    {
+      tableName: "LogAcesso",
+      timestamps: false,
+    }
+  );
 
-	return LogAcesso;
+  LogAcesso.associate = function (models) {
+    // LogAcesso -> Usuario (N:1)
+    LogAcesso.belongsTo(models.Usuario, {
+      foreignKey: "fk_Usuario_idUsuario",
+    });
+  };
+
+  return LogAcesso;
 };

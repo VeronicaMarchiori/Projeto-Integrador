@@ -1,115 +1,88 @@
-const pontoRondaRepository = require("../repositories/pontoRondaRepository");
+const pontoRondaRepository = require("../repositories/pontoRondaRepositories");
 
-// Função para retornar todos os pontoRonda
-const retornaTodosPontoRonda = async (req, res) => {
-    try {
-        const pontoRonda = await pontoRondaRepository.obterTodosPontoRonda();
-        res.status(200).json({ pontoRonda: pontoRonda });
-    } catch (error) {
-        console.log("Erro ao buscar pontoRonda:", error);
-        res.sendStatus(500);
-    }
+// Função para retornar todos os pontos de ronda
+const retornaTodosPontosRonda = async (req, res) => {
+  try {
+    const pontosRonda = await pontoRondaRepository.obterTodosPontosRonda();
+    res.status(200).json({ pontosRonda: pontosRonda });
+  } catch (error) {
+    console.log("Erro ao buscar pontos de ronda:", error);
+    res.sendStatus(500);
+  }
 };
 
-// Função para buscar pontoRonda por ID
+// Função para retornar ponto de ronda por ID
 const retornaPontoRondaPorId = async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const pontoRonda = await pontoRondaRepository.obterPontoRondaPorId({
-            id,
-        });
-
-        if (pontoRonda) {
-            res.status(200).json(pontoRonda);
-        } else {
-            res.status(404).json({ message: "PontoRonda não encontrado." });
-        }
-    } catch (error) {
-        console.log("Erro ao buscar pontoRonda:", error);
-        res.sendStatus(500);
+  const idPontoR = parseInt(req.params.id);
+  
+  try {
+    const pontoRonda = await pontoRondaRepository.obterPontoRondaPorId(idPontoR);
+    
+    if (!pontoRonda) {
+      res.status(404).json({ message: "Ponto de ronda não encontrado" });
+    } else {
+      res.status(200).json(pontoRonda);
     }
+  } catch (error) {
+    console.log("Erro ao buscar ponto de ronda:", error);
+    res.sendStatus(500);
+  }
 };
 
-// Função para criar um novo pontoRonda
-const criarPontoRonda = async (req, res) => {
-    const { id, descricao, latitude, longitude, qrcode, obrigatoro, Hora, data} = req.body;
-    console.log({id, descricao, latitude, longitude, qrcode, obrigatoro, Hora, data});
-    try {
-        if (!id || !latitude || !longitude || !qrcode || !obrigatoro) {
-            return res
-                .status(400)
-                .json({ message: "ID, latitude, longitude,qrcode e obrigatoro são obrigatórios." });
-        }
-
-        const pontoRonda = await pontoRondaRepository.criarPontoRonda({
-           id, 
-           descricao, 
-           latitude, 
-           longitude, 
-           qrcode, 
-           obrigatoro, 
-           Hora, 
-           data,
-        });
-        res.status(201).json(pontoRonda);
-    } catch (error) {
-        console.log("Erro ao criar pontoRonda:", error);
-        res.sendStatus(500);
-    }
+// Função para criar um ponto de ronda
+const criaPontoRonda = async (req, res) => {
+  const pontoData = req.body;
+  
+  try {
+    const pontoRondaCriado = await pontoRondaRepository.criaPontoRonda(pontoData);
+    res.status(201).json(pontoRondaCriado);
+  } catch (error) {
+    console.log("Erro ao criar ponto de ronda:", error);
+    res.sendStatus(500);
+  }
 };
 
-// Função para atualizar um pontoRonda
+// Função para atualizar um ponto de ronda
 const atualizaPontoRonda = async (req, res) => {
-    const { descricao, latitude, longitude, qrcode, obrigatoro, Hora, data } = req.body;
-    const id = parseInt(req.params.id);
-    try {
-        const pontoRondaAtualizado = await pontoRondaRepository.atualizarPontoRonda({
-           id, 
-           descricao, 
-           latitude, 
-           longitude, 
-           qrcode, 
-           obrigatoro, 
-           Hora, 
-           data,
-        });
-
-        if (pontoRondaAtualizado) {
-            res.status(200).json(pontoRondaAtualizado);
-        } else {
-            res.status(404).json({ message: "pontoRonda não encontrado" });
-        }
-    } catch (error) {
-        console.log("Erro ao atualizar pontoRonda:", error);
-        res.sendStatus(500);
+  const idPontoR = parseInt(req.params.id);
+  const pontoData = req.body;
+  
+  try {
+    const pontoRondaAtualizado = await pontoRondaRepository.atualizaPontoRonda(idPontoR, pontoData);
+    
+    if (!pontoRondaAtualizado) {
+      res.status(404).json({ message: "Ponto de ronda não encontrado" });
+    } else {
+      res.status(200).json(pontoRondaAtualizado);
     }
+  } catch (error) {
+    console.log("Erro ao atualizar ponto de ronda:", error);
+    res.sendStatus(500);
+  }
 };
 
-// Função para deletar um pontoRonda
+// Função para deletar um ponto de ronda
 const deletaPontoRonda = async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const pontoRondaRemovido = await pontoRondaRepository.deletarPontoRonda({ id });
-
-        if (pontoRondaRemovido) {
-            res.status(200).json({
-                message: "pontoRonda removido com sucesso.",
-                pontoRonda: pontoRondaRemovido,
-            });
-        } else {
-            res.status(404).json({ message: "PontoRonda não encontrado" });
-        }
-    } catch (error) {
-        console.error("Erro ao deletar pontoRonda:", error);
-        res.status(500).json({ message: "Erro ao deletar pontoRonda" });
+  const idPontoR = parseInt(req.params.id);
+  
+  try {
+    const pontoRondaDeletado = await pontoRondaRepository.deletaPontoRonda(idPontoR);
+    
+    if (!pontoRondaDeletado) {
+      res.status(404).json({ message: "Ponto de ronda não encontrado" });
+    } else {
+      res.status(200).json({ message: "Ponto de ronda deletado com sucesso" });
     }
+  } catch (error) {
+    console.log("Erro ao deletar ponto de ronda:", error);
+    res.sendStatus(500);
+  }
 };
-
 
 module.exports = {
-    retornaTodosPontoRonda,
-    retornaPontoRondaPorId,
-    criarPontoRonda,
-    atualizaPontoRonda,
-    deletaPontoRonda,
+  retornaTodosPontosRonda,
+  retornaPontoRondaPorId,
+  criaPontoRonda,
+  atualizaPontoRonda,
+  deletaPontoRonda,
 };

@@ -1,141 +1,151 @@
-const rondaRepository = require("../repositories/rondaRepository");
+const rondaRepository = require("../repositories/rondaRepositories");
+const model = require("../models");
 
-// Função para retornar todos os ronda
-const retornaTodasRonda = async (req, res) => {
-	try {
-		const ronda = await rondaRepository.obterTodosRonda();
-		res.status(200).json({ ronda: ronda });
-	} catch (error) {
-		console.log("Erro ao buscar ronda:", error);
-		res.sendStatus(500);
-	}
+// Função para retornar todas as rondas
+const retornaTodasRondas = async (req, res) => {
+  try {
+    const rondas = await rondaRepository.obterTodasRondas();
+    res.status(200).json({ rondas: rondas });
+  } catch (error) {
+    console.log("Erro ao buscar rondas:", error);
+    res.sendStatus(500);
+  }
 };
 
-// Função para retornar todos os ronda de um Empresa
-const retornaRondaPorEmpresa = async (req, res) => {
-	try {
-		const idEmpresa = parseInt(req.params.idEmpresa);
-		const ronda = await empresaRepository.obterRondaPorIdEmpresa(idEmpresa);
-		res.status(200).json({ ronda: ronda });
-	} catch (error) {
-		console.log("Erro ao buscar ronda:", error);
-		res.sendStatus(500);
-	}
-};
-
-// Função para retornar todos os ronda de um Administrador
-const retornaRondaPorAdministrador = async (req, res) => {
-	try {
-		const idAdministrador = parseInt(req.params.idAdministrador);
-		const ronda = await empresaRepository.obterRondaPorIdAdministrador(idAdministrador);
-		res.status(200).json({ ronda: ronda });
-	} catch (error) {
-		console.log("Erro ao buscar ronda:", error);
-		res.sendStatus(500);
-	}
-};
-
-
-// Função para buscar ronda por ID
+// Função para retornar ronda por ID
 const retornaRondaPorId = async (req, res) => {
-	try {
-		const id = parseInt(req.params.id);
-		const ronda = await rondaRepository.obterRondaPorId({
-			id,
-		});
-
-		if (ronda) {
-			res.status(200).json(ronda);
-		} else {
-			res.status(404).json({ message: "Ronda não encontrado." });
-		}
-	} catch (error) {
-		console.log("Erro ao buscar ronda:", error);
-		res.sendStatus(500);
-	}
+  const idRonda = parseInt(req.params.id);
+  
+  try {
+    const ronda = await rondaRepository.obterRondaPorId(idRonda);
+    
+    if (!ronda) {
+      res.status(404).json({ message: "Ronda não encontrada" });
+    } else {
+      res.status(200).json(ronda);
+    }
+  } catch (error) {
+    console.log("Erro ao buscar ronda:", error);
+    res.sendStatus(500);
+  }
 };
 
-
-// Função para criar um novo ronda
-const criarRonda = async (req, res) => {
-	const { id,nome, periodo, sequenciaPontos,  tempoEstimado, idEmpresa, idAdministrador } = req.body;
-	try {
-		if (!id || !nome || !idEmpresa || !idAdministrador) {
-			return res
-				.status(400)
-				.json({
-					message: "ID, nome, ID do curso e ID do Administrador são obrigatórios.",
-				});
-		}
-
-		const ronda = await rondaRepository.criarRonda({
-			id,
-            nome,
-			periodo,
-			sequenciaPontos,
-			tempoEstimado,
-            idEmpresa, 
-            idAdministrador,
-		});
-		res.status(201).json(ronda);
-	} catch (error) {
-		console.log("Erro ao criar ronda:", error);
-		res.sendStatus(500);
-	}
+// Função para criar uma ronda
+const criaRonda = async (req, res) => {
+  const rondaData = req.body;
+  const { pontos, ...dadosRonda } = rondaData;
+  
+  try {
+    // Criar ronda
+    const ronda = await rondaRepository.criaRonda(dadosRonda);
+    
+    // Adicionar pontos se fornecidos
+    if (pontos && pontos.length > 0) {
+      const rondaCompleta = await model.Ronda.findByPk(ronda.idRonda);
+      const pontosRonda = await model.PontoRonda.findAll({
+        where: {
+          idPontoR: pontos,
+        },
+      });
+      
+      if (rondaCompleta && pontosRonda.length > 0) {
+        await rondaCompleta.addPontoRondas(pontosRonda);
+      }
+    }
+    
+    const rondaCriada = await rondaRepository.obterRondaPorId(ronda.idRonda);
+    res.status(201).json(rondaCriada);
+  } catch (error) {
+    console.log("Erro ao criar ronda:", error);
+    res.sendStatus(500);
+  }
 };
 
-// Função para atualizar um ronda
+// Função para atualizar uma ronda
 const atualizaRonda = async (req, res) => {
-	const { nome, periodo, sequenciaPontos,  tempoEstimado, idEmpresa, idAdministrador } = req.body;
-	const id = parseInt(req.params.id);
-	try {
-		const rondaAtualizado = await rondaRepository.atualizarRonda({
-			id,
-            nome,
-			periodo,
-			sequenciaPontos,
-			tempoEstimado,
-            idEmpresa, 
-            idAdministrador,
-		});
-
-		if (rondaAtualizado) {
-			res.status(200).json(rondaAtualizado);
-		} else {
-			res.status(404).json({ message: "ronda não encontrado" });
-		}
-	} catch (error) {
-		console.log("Erro ao atualizar ronda:", error);
-		res.sendStatus(500);
-	}
+  const idRonda = parseInt(req.params.id);
+  const rondaData = req.body;
+  
+  try {
+    const rondaAtualizada = await rondaRepository.atualizaRonda(idRonda, rondaData);
+    
+    if (!rondaAtualizada) {
+      res.status(404).json({ message: "Ronda não encontrada" });
+    } else {
+      res.status(200).json(rondaAtualizada);
+    }
+  } catch (error) {
+    console.log("Erro ao atualizar ronda:", error);
+    res.sendStatus(500);
+  }
 };
 
-// Função para deletar um ronda
+// Função para deletar uma ronda
 const deletaRonda = async (req, res) => {
-	try {
-		const id = parseInt(req.params.id);
-		const rondaRemovido = await rondaRepository.deletarRonda({ id });
+  const idRonda = parseInt(req.params.id);
+  
+  try {
+    const rondaDeletada = await rondaRepository.deletaRonda(idRonda);
+    
+    if (!rondaDeletada) {
+      res.status(404).json({ message: "Ronda não encontrada" });
+    } else {
+      res.status(200).json({ message: "Ronda deletada com sucesso" });
+    }
+  } catch (error) {
+    console.log("Erro ao deletar ronda:", error);
+    res.sendStatus(500);
+  }
+};
 
-		if (rondaRemovido) {
-			res.status(200).json({
-				message: "ronda removido com sucesso.",
-				ronda: rondaRemovido,
-			});
-		} else {
-			res.status(404).json({ message: "ronda não encontrado" });
-		}
-	} catch (error) {
-		console.error("Erro ao deletar ronda:", error);
-		res.status(500).json({ message: "Erro ao deletar ronda" });
-	}
+// Função para adicionar ponto a uma ronda
+const adicionaPontoRonda = async (req, res) => {
+  const idRonda = parseInt(req.params.idRonda);
+  const idPonto = parseInt(req.params.idPonto);
+  
+  try {
+    const ronda = await model.Ronda.findByPk(idRonda);
+    const ponto = await model.PontoRonda.findByPk(idPonto);
+    
+    if (!ronda || !ponto) {
+      return res.status(404).json({ message: "Ronda ou ponto não encontrado" });
+    }
+    
+    await ronda.addPontoRonda(ponto);
+    res.status(200).json({ message: "Ponto adicionado à ronda com sucesso" });
+  } catch (error) {
+    console.log("Erro ao adicionar ponto à ronda:", error);
+    res.sendStatus(500);
+  }
+};
+
+// Função para remover ponto de uma ronda
+const removePontoRonda = async (req, res) => {
+  const idRonda = parseInt(req.params.idRonda);
+  const idPonto = parseInt(req.params.idPonto);
+  
+  try {
+    const ronda = await model.Ronda.findByPk(idRonda);
+    const ponto = await model.PontoRonda.findByPk(idPonto);
+    
+    if (!ronda || !ponto) {
+      return res.status(404).json({ message: "Ronda ou ponto não encontrado" });
+    }
+    
+    await ronda.removePontoRonda(ponto);
+    res.status(200).json({ message: "Ponto removido da ronda com sucesso" });
+  } catch (error) {
+    console.log("Erro ao remover ponto da ronda:", error);
+    res.sendStatus(500);
+  }
 };
 
 module.exports = {
-	retornaTodasRonda,
-    retornaRondaPorEmpresa,
-	retornaRondaPorAdministrador,
-    retornaRondaPorId,
-	criarRonda,
-	atualizaRonda,
-	deletaRonda,
+  retornaTodasRondas,
+  retornaRondaPorId,
+  criaRonda,
+  atualizaRonda,
+  deletaRonda,
+  adicionaPontoRonda,
+  removePontoRonda,
 };

@@ -1,39 +1,55 @@
 "use strict";
 
-module.exports = (sequelize, DataTypes) => {
-	const PontoRonda = sequelize.define(
-		"PontoRonda",
-		{
-            id: {
-				type: DataTypes.INTEGER,
-				primaryKey: true,
-                autoIncrement: true
-			},
-			descricao: DataTypes.STRING,
-            latitude: DataTypes.DECIMAL(10,7),
-            longitude: DataTypes.DECIMAL(10,7),
-            qrcode: DataTypes.STRING,
-            obrigatoro: DataTypes.BOOLEAN,
-            dataP: DataTypes.DATEONLY,
-            hora: DataTypes.TIME,
+const { DataTypes } = require("sequelize");
 
-		},
-		{
-			sequelize,
-			tableName: "pontoRonda",
-			schema: "public",
-			freezeTableName: true,
-			timestamps: false,
-		},
-	);
+module.exports = (sequelize) => {
+  const PontoRonda = sequelize.define(
+    "PontoRonda",
+    {
+      idPontoR: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      descricao: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      latitude: {
+        type: DataTypes.FLOAT,
+      },
+      longitude: {
+        type: DataTypes.FLOAT,
+      },
+      qrcode: {
+        type: DataTypes.TEXT,
+      },
+      obrigatorio: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+      },
+      hora: {
+        type: DataTypes.STRING,
+      },
+      data: {
+        type: DataTypes.STRING,
+      },
+    },
+    {
+      tableName: "PontoRonda",
+      timestamps: false,
+    }
+  );
 
-	PontoRonda.associate = function (models)  {
-        PontoRonda.hasMany(models.TemPontosRondas, {
-			foreignKey: "idRonda",
-			sourceKey: "id",
-		});
+  PontoRonda.associate = function (models) {
+    // PontoRonda <-> Ronda (N:N)
+    PontoRonda.belongsToMany(models.Ronda, {
+      through: "TemPontosRondas",
+      foreignKey: "fk_PontoRonda_idPontoR",
+      otherKey: "fk_Ronda_idRonda",
+      timestamps: false,
+    });
+  };
 
-	};
-
-	return PontoRonda;
+  return PontoRonda;
 };

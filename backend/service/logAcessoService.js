@@ -1,126 +1,86 @@
-const logAcessoRepository = require("../repositories/logAcessoRepository");
-logAcesso
-// Função para retornar todos os logAcesso
-const retornaTodosLogAcesso = async (req, res) => {
-    try {
-        const logAcesso = await logAcessoRepository.obterTodoslogAcesso();
-        res.status(200).json({ logAcesso: logAcesso });
-    } catch (error) {
-        console.log("Erro ao buscar logAcesso:", error);
-        res.sendStatus(500);
-    }
+const logAcessoRepository = require("../repositories/logAcessoRepositories");
+
+// Função para retornar todos os logs de acesso
+const retornaTodosLogsAcesso = async (req, res) => {
+  const usuarioId = req.query.usuarioId ? parseInt(req.query.usuarioId) : null;
+  const sucesso = req.query.sucesso !== undefined ? req.query.sucesso === 'true' : null;
+  
+  try {
+    const logsAcesso = await logAcessoRepository.obterTodosLogsAcesso(usuarioId, sucesso);
+    res.status(200).json({ logsAcesso: logsAcesso });
+  } catch (error) {
+    console.log("Erro ao buscar logs de acesso:", error);
+    res.sendStatus(500);
+  }
 };
 
-// Função para retornar todos os logAcesso de um Usuario
-const retornaLogAcessoPorUsuario = async (req, res) => {
-    try {
-        const idUsuario = parseInt(req.params.idUsuario);
-        const logAcesso = await logAcessoRepository.obterLogAcessoPorIdUsuario(idUsuario);
-        res.status(200).json({ logAcesso: logAcesso });
-    } catch (error) {
-        console.log("Erro ao buscar logAcesso:", error);
-        res.sendStatus(500);
-    }
-};
-
-// Função para criar um novo logAcesso
-const criarLogAcesso = async (req, res) => {
-    const {id,sucesso, ip, hora,idUsuario, Hora, data} = req.body;
-    try {
-        if (!id || !descricao || !idUsuario) {
-            return res
-                .status(400)
-                .json({
-                    message: "ID, descrição e ID do Usuario são obrigatórios.",
-                });
-        }
-
-        const logAcesso = await logAcessoRepository.criarLogAcesso({
-            id,
-            sucesso, 
-            ip, 
-            hora,
-            idUsuario, 
-            Hora, 
-            data
-        });
-        res.status(201).json(logAcesso);
-    } catch (error) {
-        console.log("Erro ao criar logAcesso:", error);
-        res.sendStatus(500);
-    }
-};
-
-// Função para atualizar um logAcesso
-const atualizaLogAcesso = async (req, res) => {
-    const { sucesso, ip, hora,idUsuario, Hora, data } = req.body;
-    const id = parseInt(req.params.id);
-    try {
-        const logAcessoAtualizado = await logAcessoRepository.atualizarlogAcesso({
-            id,
-            sucesso, 
-            ip, 
-            hora,
-            idUsuario, 
-            Hora, 
-            data
-        });
-
-        if (logAcessoAtualizado) {
-            res.status(200).json(logAcessoAtualizado);
-        } else {
-            res.status(404).json({ message: "logAcesso não encontrado" });
-        }
-    } catch (error) {
-        console.log("Erro ao atualizar logAcesso:", error);
-        res.sendStatus(500);
-    }
-};
-
-// Função para deletar um logAcesso
-const deletaLogAcesso = async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const logAcessoRemovido = await logAcessoRepository.deletarLogAcesso({ id });
-
-        if (logAcessoRemovido) {
-            res.status(200).json({
-                message: "logAcesso removido com sucesso.",
-                logAcesso: logAcessoRemovido,
-            });
-        } else {
-            res.status(404).json({ message: "logAcesso não encontrado" });
-        }
-    } catch (error) {
-        console.error("Erro ao deletar logAcesso:", error);
-        res.status(500).json({ message: "Erro ao deletar logAcesso" });
-    }
-};
-
-// Função para buscar logAcesso por ID
+// Função para retornar log de acesso por ID
 const retornaLogAcessoPorId = async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const logAcesso = await logAcessoRepository.obterLogAcessoaPorId({
-            id,
-        });
-
-        if (logAcesso) {
-            res.status(200).json(logAcesso);
-        } else {
-            res.status(404).json({ message: "logAcesso não encontrado." });
-        }
-    } catch (error) {
-        console.log("Erro ao buscar logAcesso:", error);
-        res.sendStatus(500);
+  const idLogA = parseInt(req.params.id);
+  
+  try {
+    const logAcesso = await logAcessoRepository.obterLogAcessoPorId(idLogA);
+    
+    if (!logAcesso) {
+      res.status(404).json({ message: "Log de acesso não encontrado" });
+    } else {
+      res.status(200).json(logAcesso);
     }
+  } catch (error) {
+    console.log("Erro ao buscar log de acesso:", error);
+    res.sendStatus(500);
+  }
+};
+
+// Função para criar um log de acesso
+const criaLogAcesso = async (req, res) => {
+  const logData = req.body;
+  
+  try {
+    const logAcessoCriado = await logAcessoRepository.criaLogAcesso(logData);
+    res.status(201).json(logAcessoCriado);
+  } catch (error) {
+    console.log("Erro ao criar log de acesso:", error);
+    res.sendStatus(500);
+  }
+};
+
+// Função para deletar um log de acesso
+const deletaLogAcesso = async (req, res) => {
+  const idLogA = parseInt(req.params.id);
+  
+  try {
+    const logAcessoDeletado = await logAcessoRepository.deletaLogAcesso(idLogA);
+    
+    if (!logAcessoDeletado) {
+      res.status(404).json({ message: "Log de acesso não encontrado" });
+    } else {
+      res.status(200).json({ message: "Log de acesso deletado com sucesso" });
+    }
+  } catch (error) {
+    console.log("Erro ao deletar log de acesso:", error);
+    res.sendStatus(500);
+  }
+};
+
+// Função para limpar logs antigos
+const limparLogsAntigos = async (req, res) => {
+  try {
+    const logsLimpos = await logAcessoRepository.limparLogsAntigos();
+    res.status(200).json({ 
+      message: "Logs antigos limpos com sucesso",
+      quantidade: logsLimpos 
+    });
+  } catch (error) {
+    console.log("Erro ao limpar logs antigos:", error);
+    res.sendStatus(500);
+  }
 };
 
 module.exports = {
-    retornaTodosLogAcesso,
-    retornaLogAcessoPorUsuario,
-    criarLogAcesso,
-    atualizaLogAcesso,
-    deletaLogAcesso,
-    retornaLogAcessoPorId,
+  retornaTodosLogsAcesso,
+  retornaLogAcessoPorId,
+  criaLogAcesso,
+  deletaLogAcesso,
+  limparLogsAntigos,
 };

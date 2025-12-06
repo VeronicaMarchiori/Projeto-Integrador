@@ -1,35 +1,44 @@
 "use strict";
 
-module.exports = (sequelize, DataTypes) => {
-	const Administrador = sequelize.define(
-		"Administrador",
-		{
-            idUsuario: {
-				type: DataTypes.INTEGER,
-				autoIncrement: true,
-				foreignKey: true,
-			},
-			nivelAcesso: DataTypes.STRING,
-		},
-		{
-			sequelize,
-			tableName: "administrador",
-			schema: "public",
-			freezeTableName: true,
-			timestamps: false,
-		},
-	);
+const { DataTypes } = require("sequelize");
 
-	Administrador.associate = function (models)  {
-		Administrador.belongsTo(models.Usuario, {
-			foreignKey: "idUsuario",
-			sourceKey: "id",
-		});
-		Administrador.hasMany(models.Ronda, {
-			foreignKey: "idRonda",
-			sourceKey: "id",
-		});
-	};
+module.exports = (sequelize) => {
+  const Administrador = sequelize.define(
+    "Administrador",
+    {
+      idUsuario: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        references: {
+          model: "Usuario",
+          key: "idUsuario",
+        },
+      },
+      nivelAcesso: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: "padrao",
+      },
+    },
+    {
+      tableName: "Administrador",
+      timestamps: false,
+    }
+  );
 
-	return Administrador;
+  Administrador.associate = function (models) {
+    // Administrador -> Usuario (N:1)
+    Administrador.belongsTo(models.Usuario, {
+      foreignKey: "idUsuario",
+      sourceKey: "idUsuario",
+    });
+
+    // Administrador -> Ronda (1:N)
+    Administrador.hasMany(models.Ronda, {
+      foreignKey: "fk_Administrador_idUsuario",
+      sourceKey: "idUsuario",
+    });
+  };
+
+  return Administrador;
 };

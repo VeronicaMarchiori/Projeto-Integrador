@@ -1,124 +1,151 @@
-const percursoRepository = require("../repositories/percursoRepository");
+const percursoRepository = require("../repositories/percursoRepositories");
+const model = require("../models");
 
-// Função para retornar todos os percurso
-const retornaTodasPercurso = async (req, res) => {
-    try {
-        const percurso = await percursoRepository.obterTodosPercurso();
-        res.status(200).json({ percurso: percurso });
-    } catch (error) {
-        console.log("Erro ao buscar percurso:", error);
-        res.sendStatus(500);
-    }
+// Função para retornar todos os percursos
+const retornaTodosPercursos = async (req, res) => {
+  try {
+    const percursos = await percursoRepository.obterTodosPercursos();
+    res.status(200).json({ percursos: percursos });
+  } catch (error) {
+    console.log("Erro ao buscar percursos:", error);
+    res.sendStatus(500);
+  }
 };
 
-// Função para retornar todos os Percurso de um ronda
-const retornaPercursoPorRonda = async (req, res) => {
-    try {
-        const idRonda = parseInt(req.params.idRonda);
-        const percurso = await percursoRepository.obtePercursoPorIdRonda(idRonda);
-        res.status(200).json({ percurso: percurso });
-    } catch (error) {
-        console.log("Erro ao buscar Percurso:", error);
-        res.sendStatus(500);
+// Função para retornar percurso por ID
+const retornaPercursoPorId = async (req, res) => {
+  const idPercurso = parseInt(req.params.id);
+  
+  try {
+    const percurso = await percursoRepository.obterPercursoPorId(idPercurso);
+    
+    if (!percurso) {
+      res.status(404).json({ message: "Percurso não encontrado" });
+    } else {
+      res.status(200).json(percurso);
     }
+  } catch (error) {
+    console.log("Erro ao buscar percurso:", error);
+    res.sendStatus(500);
+  }
 };
 
-// Função para criar um novo Percurso
-const criarPercurso = async (req, res) => {
-    const {id,dataInicio, dataFim, kmPercorrido, observacoes, idRonda} = req.body;
-    try {
-        if (!id || !kmPercorrido || !idRonda) {
-            return res
-                .status(400)
-                .json({
-                    message: "ID, kmPercorrido e ID do Ronda são obrigatórios.",
-                });
-        }
-
-        const percurso = await percursoRepository.criarPercurso({
-            id,
-            dataInicio, 
-            dataFim, 
-            kmPercorrido, 
-            observacoes, 
-            idRonda,
-        });
-        res.status(201).json(percurso);
-    } catch (error) {
-        console.log("Erro ao criar Percurso:", error);
-        res.sendStatus(500);
+// Função para criar um percurso
+const criaPercurso = async (req, res) => {
+  const percursoData = req.body;
+  const { vigias, ...dadosPercurso } = percursoData;
+  
+  try {
+    // Criar percurso
+    const percurso = await percursoRepository.criaPercurso(dadosPercurso);
+    
+    // Adicionar vigias se fornecidos
+    if (vigias && vigias.length > 0) {
+      const percursoCompleto = await model.Percurso.findByPk(percurso.idPercurso);
+      const vigiasEncontrados = await model.Vigia.findAll({
+        where: {
+          idUsuario: vigias,
+        },
+      });
+      
+      if (percursoCompleto && vigiasEncontrados.length > 0) {
+        await percursoCompleto.addVigias(vigiasEncontrados);
+      }
     }
+    
+    const percursoCriado = await percursoRepository.obterPercursoPorId(percurso.idPercurso);
+    res.status(201).json(percursoCriado);
+  } catch (error) {
+    console.log("Erro ao criar percurso:", error);
+    res.sendStatus(500);
+  }
 };
 
 // Função para atualizar um percurso
 const atualizaPercurso = async (req, res) => {
-    const {dataInicio, dataFim, kmPercorrido, observacoes, idRonda } = req.body;
-    const id = parseInt(req.params.id);
-    try {
-        const percursoAtualizado = await percursoRepository.atualizarPercurso({
-            id,
-            dataInicio, 
-            dataFim, 
-            kmPercorrido, 
-            observacoes, 
-            idRonda,
-        });
-
-        if (percursoAtualizado) {
-            res.status(200).json(percursoAtualizado);
-        } else {
-            res.status(404).json({ message: "percurso não encontrado" });
-        }
-    } catch (error) {
-        console.log("Erro ao atualizar percurso:", error);
-        res.sendStatus(500);
+  const idPercurso = parseInt(req.params.id);
+  const percursoData = req.body;
+  
+  try {
+    const percursoAtualizado = await percursoRepository.atualizaPercurso(idPercurso, percursoData);
+    
+    if (!percursoAtualizado) {
+      res.status(404).json({ message: "Percurso não encontrado" });
+    } else {
+      res.status(200).json(percursoAtualizado);
     }
+  } catch (error) {
+    console.log("Erro ao atualizar percurso:", error);
+    res.sendStatus(500);
+  }
 };
 
 // Função para deletar um percurso
 const deletaPercurso = async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const percursoRemovido = await percursoRepository.deletarPercurso({ id });
-
-        if (percursoRemovido) {
-            res.status(200).json({
-                message: "percurso removido com sucesso.",
-                percurso: percursoRemovido,
-            });
-        } else {
-            res.status(404).json({ message: "percurso não encontrado" });
-        }
-    } catch (error) {
-        console.error("Erro ao deletar percurso:", error);
-        res.status(500).json({ message: "Erro ao deletar percurso" });
+  const idPercurso = parseInt(req.params.id);
+  
+  try {
+    const percursoDeletado = await percursoRepository.deletaPercurso(idPercurso);
+    
+    if (!percursoDeletado) {
+      res.status(404).json({ message: "Percurso não encontrado" });
+    } else {
+      res.status(200).json({ message: "Percurso deletado com sucesso" });
     }
+  } catch (error) {
+    console.log("Erro ao deletar percurso:", error);
+    res.sendStatus(500);
+  }
 };
 
-// Função para buscar percurso por ID
-const retornaPercursoPorId = async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const percurso = await percursoRepository.obterPercursoPorId({
-            id,
-        });
-
-        if (percurso) {
-            res.status(200).json(percurso);
-        } else {
-            res.status(404).json({ message: "percurso não encontrado." });
-        }
-    } catch (error) {
-        console.log("Erro ao buscar percurso:", error);
-        res.sendStatus(500);
+// Função para adicionar vigia a um percurso
+const adicionaVigiaPercurso = async (req, res) => {
+  const idPercurso = parseInt(req.params.idPercurso);
+  const idVigia = parseInt(req.params.idVigia);
+  
+  try {
+    const percurso = await model.Percurso.findByPk(idPercurso);
+    const vigia = await model.Vigia.findByPk(idVigia);
+    
+    if (!percurso || !vigia) {
+      return res.status(404).json({ message: "Percurso ou vigia não encontrado" });
     }
+    
+    await percurso.addVigia(vigia);
+    res.status(200).json({ message: "Vigia adicionado ao percurso com sucesso" });
+  } catch (error) {
+    console.log("Erro ao adicionar vigia ao percurso:", error);
+    res.sendStatus(500);
+  }
+};
+
+// Função para remover vigia de um percurso
+const removeVigiaPercurso = async (req, res) => {
+  const idPercurso = parseInt(req.params.idPercurso);
+  const idVigia = parseInt(req.params.idVigia);
+  
+  try {
+    const percurso = await model.Percurso.findByPk(idPercurso);
+    const vigia = await model.Vigia.findByPk(idVigia);
+    
+    if (!percurso || !vigia) {
+      return res.status(404).json({ message: "Percurso ou vigia não encontrado" });
+    }
+    
+    await percurso.removeVigia(vigia);
+    res.status(200).json({ message: "Vigia removido do percurso com sucesso" });
+  } catch (error) {
+    console.log("Erro ao remover vigia do percurso:", error);
+    res.sendStatus(500);
+  }
 };
 
 module.exports = {
-    retornaTodasPercurso,
-    retornaPercursoPorRonda,
-    criarPercurso,
-    atualizaPercurso,
-    deletaPercurso,
-    retornaPercursoPorId,
+  retornaTodosPercursos,
+  retornaPercursoPorId,
+  criaPercurso,
+  atualizaPercurso,
+  deletaPercurso,
+  adicionaVigiaPercurso,
+  removeVigiaPercurso,
 };

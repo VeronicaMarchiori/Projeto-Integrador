@@ -1,36 +1,48 @@
 "use strict";
 
-module.exports = (sequelize, DataTypes) => {
-	const Vigia = sequelize.define(
-		"Vigia",
-		{
-            idUsuario: {
-				type: DataTypes.INTEGER,
-				autoIncrement: true,
-				foreignKey: true,
-			},
-			disponivel: DataTypes.BOOLEAN,
-            dataCriacao: DataTypes.DATEONLY,
-		},
-		{
-			sequelize,
-			tableName: "Vigia",
-			schema: "public",
-			freezeTableName: true,
-			timestamps: false,
-		},
-	);
+const { DataTypes } = require("sequelize");
 
-	Vigia.associate = function (models)  {
-		Vigia.belongsTo(models.Usuario, {
-			foreignKey: "idUsuario",
-			sourceKey: "id",
-		});
-		Vigia.hasMany(models.RealizaPercurso, {
-			foreignKey: "idRealizaPercurso",
-			sourceKey: "id",
-		});
-	};
+module.exports = (sequelize) => {
+  const Vigia = sequelize.define(
+    "Vigia",
+    {
+      idUsuario: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        references: {
+          model: "Usuario",
+          key: "idUsuario",
+        },
+      },
+      foto: {
+        type: DataTypes.TEXT,
+      },
+      EstaRonda: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+    },
+    {
+      tableName: "Vigia",
+      timestamps: false,
+    }
+  );
 
-	return Vigia;
+  Vigia.associate = function (models) {
+    // Vigia -> Usuario (N:1)
+    Vigia.belongsTo(models.Usuario, {
+      foreignKey: "idUsuario",
+      sourceKey: "idUsuario",
+    });
+
+    // Vigia <-> Percurso (N:N)
+    Vigia.belongsToMany(models.Percurso, {
+      through: "realizaPercurso",
+      foreignKey: "fk_Vigia_fk_Usuario_idUsuario",
+      otherKey: "fk_Percurso_idPercurso",
+      timestamps: false,
+    });
+  };
+
+  return Vigia;
 };
