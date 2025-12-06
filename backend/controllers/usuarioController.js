@@ -8,7 +8,7 @@ const usuarioRouter = express.Router();
 usuarioRouter.post("/", usuarioService.criarUsuario);
 
 // GET /usuario - Retornar todos os usuario
-usuarioRouter.get("/todos", usuarioService.retornaTodasUsuario);
+usuarioRouter.get("/todos", usuarioService.retornaTodosUsuario);
 
 // GET /usuario/:id - Retornar usuario por ID
 usuarioRouter.get("/:id", usuarioService.retornaUsuarioPorId);

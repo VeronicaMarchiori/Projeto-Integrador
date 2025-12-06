@@ -8,7 +8,7 @@ const vigiaRouter = express.Router();
 vigiaRouter.post("/", vigiaService.criarVigia);
 
 // GET /vigia - Retornar todos os vigia
-vigiaRouter.get("/todos", vigiaService.retornaTodasVigia);
+vigiaRouter.get("/todos", vigiaService.retornaTodosVigia);
 
 // GET /vigia/usuario/:id_usuario - Retornar todos os vigia de um usuario
 vigiaRouter.get("/usuario/:id_usuario", vigiaService.retornaVigiaPorUsuario)

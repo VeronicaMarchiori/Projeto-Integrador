@@ -8,7 +8,7 @@ const pontoRondaRouter = express.Router();
 pontoRondaRouter.post("/", pontoRondaService.criarPontoRonda);
 
 // GET /pontoRonda - Retornar todos os pontoRonda
-pontoRondaRouter.get("/todos", pontoRondaService.retornaTodasPontoRonda);
+pontoRondaRouter.get("/todos", pontoRondaService.retornaTodosPontoRonda);
 
 // GET /pontoRonda/:id - Retornar pontoRonda por ID
 pontoRondaRouter.get("/:id", pontoRondaService.retornaPontoRondaPorId);

@@ -1,9 +1,9 @@
-const temPontosRondasRepositories = require("../repositories/temPontosRondasRepositories");
+const temPontosRondasRepository = require("../repositories/temPontosRondasRepository");
 
 // Função para retornar todas as temPontosRondas
 const retornaTodasTemPontosRondas = async (req, res) => {
 	try {
-		const temPontosRondas = await temPontosRondasRepositories.obterTodasTemPontosRondas();
+		const temPontosRondas = await temPontosRondasRepository.obterTodasTemPontosRondas();
 		res.status(200).json({ temPontosRondas: temPontosRondas });
 	} catch (error) {
 		console.log("Erro ao buscar temPontosRondas:", error);
@@ -60,40 +60,40 @@ const atualizaTemPontosRondas = async (req, res) => {
 	const id_aluno = parseInt(req.params.id_aluno);
 
 	try {
-		const matriculaAtualizada =
-			await matriculaRepository.atualizarMatricula({
+		const TemPontosRondasAtualizada =
+			await matriculaRepository.atualizarTemPontosRondas({
 				id_aluno,
 				id_curso,
 			});
 
-		if (matriculaAtualizada) {
-			res.status(200).json(matriculaAtualizada);
+		if (TemPontosRondasAtualizada) {
+			res.status(200).json(TemPontosRondasAtualizada);
 		} else {
-			res.status(404).json({ message: "matricula não encontrada" });
+			res.status(404).json({ message: "TemPontosRondas não encontrada" });
 		}
 	} catch (error) {
-		console.log("Erro ao atualizar matricula:", error);
+		console.log("Erro ao atualizar TemPontosRondas:", error);
 		res.sendStatus(500);
 	}
 };
 
-// Função para deletar uma matricula
+// Função para deletar uma TemPontosRondas
 const deletaTemPontosRondas = async (req, res) => {
 	try {
-		const id_aluno = parseInt(req.params.id_aluno);
-		const matriculaRemovida = await matriculaRepository.deletarMatricula(id_aluno);
+		const idRonda = parseInt(req.params.idRonda);
+		const temPontosRondasRemovida = await temPontosRondasRepositories.deletarTemPontosRondas(idRonda);
 
-		if (matriculaRemovida) {
+		if (temPontosRondasRemovida) {
 			res.status(200).json({
-				message: "matricula removida com sucesso.",
-				matricula: matriculaRemovida,
+				message: "TemPontosRondas removida com sucesso.",
+				temPontosRondas: temPontosRondasRemovida,
 			});
 		} else {
-			res.status(404).json({ message: "matricula não encontrada" });
+			res.status(404).json({ message: "TemPontosRondas não encontrada" });
 		}
 	} catch (error) {
-		console.error("Erro ao deletar matricula:", error);
-		res.status(500).json({ message: "Erro ao deletar matricula" });
+		console.error("Erro ao deletar TemPontosRondas:", error);
+		res.status(500).json({ message: "Erro ao deletar TemPontosRondas" });
 	}
 };
 
