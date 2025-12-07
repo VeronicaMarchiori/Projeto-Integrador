@@ -22,7 +22,7 @@ interface Route {
 }
 
 export function GuardDashboard() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [routes, setRoutes] = useState<Route[]>([]);
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
@@ -175,8 +175,7 @@ export function GuardDashboard() {
                 <button 
                   onClick={() => {
                     if (confirm('Deseja realmente sair?')) {
-                      localStorage.removeItem('auth_user');
-                      window.location.reload();
+                      signOut();
                     }
                   }}
                   className="w-full text-left px-4 py-3 hover:bg-red-50 text-red-600 rounded-lg transition-colors flex items-center gap-3"
@@ -319,8 +318,7 @@ export function GuardDashboard() {
               <button 
                 onClick={() => {
                   if (confirm('Deseja realmente sair?')) {
-                    localStorage.removeItem('auth_user');
-                    window.location.reload();
+                    signOut();
                   }
                 }}
                 className="w-full text-left px-4 py-3 hover:bg-red-50 text-red-600 rounded-lg transition-colors flex items-center gap-3"

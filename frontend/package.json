@@ -58,5 +58,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
-  }
+  },
+  "main": "index.js",
+  "license": "MIT"
 }
