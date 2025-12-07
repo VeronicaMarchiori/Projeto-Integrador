@@ -4,31 +4,47 @@ import { Dashboard } from './components/Dashboard';
 import { GuardDashboard } from './components/GuardDashboard';
 import { Toaster } from './components/ui/sonner';
 
-// Estamos utilizando um modo de desenvolvimento para poder mudar as páginas sem passar pela autenticação
+// MODO DESENVOLVIMENTO - Mude aqui para ver as telas diretamente sem login
 // Opções: 'admin' | 'guard' | 'login' | null
 // - 'admin': Ver Dashboard Admin (sem login)
 // - 'guard': Ver Dashboard Vigilante (sem login)
 // - 'login': Ver Tela de Login
 // - null: Comportamento normal (requer autenticação)
-const DEV_SCREEN = null;
+const DEV_SCREEN = 'admin';
 
 export default function App() {
   const { user, loading } = useAuth();
 
-  // BYPASS DE AUTENTICAÇÃO PARA O DESENVOLVIMENTO
+  // BYPASS DE AUTENTICAÇÃO PARA DESENVOLVIMENTO
   if (DEV_SCREEN === 'admin') {
+    // Mock user para modo desenvolvimento
+    const mockAdminUser = {
+      id: 'admin-dev',
+      email: 'admin@admin.com',
+      name: 'Admin DEV',
+      role: 'admin' as const,
+      cpf: '000.000.000-00',
+    };
     return (
       <>
-        <Dashboard />
+        <Dashboard mockUser={mockAdminUser} />
         <Toaster position="top-right" />
       </>
     );
   }
 
   if (DEV_SCREEN === 'guard') {
+    // Mock user para modo desenvolvimento
+    const mockGuardUser = {
+      id: 'guard-dev',
+      email: 'vigilante@vigilante.com',
+      name: 'Vigilante DEV',
+      role: 'guard' as const,
+      cpf: '111.111.111-11',
+    };
     return (
       <>
-        <GuardDashboard />
+        <GuardDashboard mockUser={mockGuardUser} />
         <Toaster position="top-right" />
       </>
     );
