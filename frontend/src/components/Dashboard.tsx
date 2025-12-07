@@ -1,5 +1,4 @@
-tsx
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
   Users, 
   FileText,
@@ -12,7 +11,7 @@ import {
   Building2,
   Route,
 } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth, User } from '../hooks/useAuth';
 import { EmployeesManager } from './EmployeesManager';
 import { ReportsManager } from './ReportsManager';
 import { CreateGuardForm } from './CreateGuardForm';
@@ -21,29 +20,15 @@ import { RoutesManager } from './RoutesManager';
 
 type MenuOption = 'employees' | 'reports' | 'create-guard' | 'clients' | 'routes';
 
-export function Dashboard() {
-  const { user, signOut } = useAuth();
+interface DashboardProps {
+  mockUser?: User;
+}
+
+export function Dashboard({ mockUser }: DashboardProps) {
+  const { user: authUser, signOut } = useAuth();
+  const user = mockUser || authUser;
   const [currentView, setCurrentView] = useState<MenuOption>('employees');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // Detectar tamanho da tela e abrir sidebar automaticamente no desktop
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setSidebarOpen(true);
-      } else {
-        setSidebarOpen(false);
-      }
-    };
-
-    // Executar na montagem do componente
-    handleResize();
-
-    // Adicionar listener para mudanças de tamanho
-    window.addEventListener('resize', handleResize);
-
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const menuItems = [
     { id: 'employees' as MenuOption, label: 'Gerenciar Funcionários', icon: Users },
@@ -86,7 +71,7 @@ export function Dashboard() {
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className={`lg:hidden hover:bg-primary-600 rounded p-1 transition-opacity ${sidebarOpen ? 'opacity-100' : 'opacity-0'}`}
+              className={`hover:bg-primary-600 rounded p-1 transition-opacity ${sidebarOpen ? 'opacity-100' : 'opacity-0'}`}
             >
               <X className="h-5 w-5" />
             </button>
@@ -99,8 +84,8 @@ export function Dashboard() {
                 {user?.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="truncate font-medium !text-white">{user?.name}</p>
-                <p className="truncate text-sm !text-primary-200">{user?.role}</p>
+                <p className="truncate font-medium text-white" style={{ color: '#ffffff' }}>{user?.name}</p>
+                <p className="truncate text-sm text-primary-200" style={{ color: '#bfdbfe' }}>{user?.role}</p>
               </div>
             </div>
           </div>

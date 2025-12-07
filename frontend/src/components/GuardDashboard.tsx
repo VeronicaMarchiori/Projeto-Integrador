@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { RouteDetails } from './RouteDetails';
 import { GuardProfile } from './GuardProfile';
 import { ClientSelection } from './ClientSelection';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth, User as UserType } from '../hooks/useAuth';
 import { apiClient } from '../utils/api';
 import { mockRoutes } from '../utils/mockData';
 import userAvatar from 'figma:asset/d63bbb04164cbfd88f680768bd7650b11073d372.png';
@@ -21,8 +21,13 @@ interface Route {
   daysOfWeek?: string[];
 }
 
-export function GuardDashboard() {
-  const { user, signOut } = useAuth();
+interface GuardDashboardProps {
+  mockUser?: UserType;
+}
+
+export function GuardDashboard({ mockUser }: GuardDashboardProps) {
+  const { user: authUser, signOut } = useAuth();
+  const user = mockUser || authUser;
   const [routes, setRoutes] = useState<Route[]>([]);
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
