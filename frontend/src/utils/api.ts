@@ -1,6 +1,4 @@
-import { projectId, publicAnonKey } from './supabase/info';
-
-const BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-76b0b579`;
+const BASE_URL = "http://localhost:3000";
 
 export class ApiClient {
   private accessToken: string | null = null;
@@ -15,66 +13,92 @@ export class ApiClient {
 
   private async request(endpoint: string, options: RequestInit = {}) {
     const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${this.accessToken || publicAnonKey}`,
+      "Content-Type": "application/json",
       ...options.headers,
     };
+
+    if (this.accessToken) {
+      headers["Authorization"] = `Bearer ${this.accessToken}`;
+    }
 
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       ...options,
       headers,
     });
 
+    const data = await response.json().catch(() => ({}));
+
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Request failed' }));
-      throw new Error(error.error || 'Request failed');
+      throw new Error(data.error || data.message || "Erro na requisição");
     }
 
-    return response.json();
+    return data;
   }
 
-  // Auth
-  async signup(data: { email: string; password: string; name: string; role: string; cpf: string }) {
-    return this.request('/signup', {
-      method: 'POST',
+  // =====================
+  // AUTENTICAÇÃO
+  // =====================
+
+  async login(email: string, senha: string) {
+    return this.request("/login", {
+      method: "POST",
+      body: JSON.stringify({ email, senha }),
+    });
+  }
+
+  async signup(data: {
+    email: string;
+    password: string;
+    name: string;
+    role: string;
+    cpf: string;
+  }) {
+    return this.request("/signup", {
+      method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  // Establishments
+  // =====================
+  // ESTABELECIMENTOS
+  // =====================
+
   async createEstablishment(data: any) {
-    return this.request('/establishments', {
-      method: 'POST',
+    return this.request("/establishments", {
+      method: "POST",
       body: JSON.stringify(data),
     });
   }
 
   async getEstablishments() {
-    return this.request('/establishments');
+    return this.request("/establishments");
   }
 
   async updateEstablishment(id: string, data: any) {
     return this.request(`/establishments/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(data),
     });
   }
 
-  // Routes
+  // =====================
+  // ROTAS
+  // =====================
+
   async createRoute(data: any) {
-    return this.request('/routes', {
-      method: 'POST',
+    return this.request("/routes", {
+      method: "POST",
       body: JSON.stringify(data),
     });
   }
 
   async getRoutes() {
-    return this.request('/routes');
+    return this.request("/routes");
   }
 
   async deleteRoute(id: string) {
     return this.request(`/routes/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 
@@ -82,40 +106,49 @@ export class ApiClient {
     return this.request(`/routes/${routeId}/points`);
   }
 
-  // Employees
+  // =====================
+  // FUNCIONÁRIOS
+  // =====================
+
   async getEmployees() {
-    return this.request('/employees');
+    return this.request("/employees");
   }
 
-  // Rounds
+  // =====================
+  // RONDAS
+  // =====================
+
   async createRound(data: any) {
-    return this.request('/rounds', {
-      method: 'POST',
+    return this.request("/rounds", {
+      method: "POST",
       body: JSON.stringify(data),
     });
   }
 
   async getRounds() {
-    return this.request('/rounds');
+    return this.request("/rounds");
   }
 
   async updateRound(id: string, data: any) {
     return this.request(`/rounds/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(data),
     });
   }
 
   async finishRound(id: string) {
     return this.request(`/rounds/${id}/finish`, {
-      method: 'POST',
+      method: "POST",
     });
   }
 
-  // Checkpoints
+  // =====================
+  // CHECKPOINTS
+  // =====================
+
   async createCheckpoint(data: any) {
-    return this.request('/checkpoints', {
-      method: 'POST',
+    return this.request("/checkpoints", {
+      method: "POST",
       body: JSON.stringify(data),
     });
   }
@@ -125,63 +158,64 @@ export class ApiClient {
   }
 
   async verifyCheckpoint(data: any) {
-    return this.request('/checkpoints/verify', {
-      method: 'POST',
+    return this.request("/checkpoints/verify", {
+      method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  // Occurrences
+  // =====================
+  // OCORRÊNCIAS
+  // =====================
+
   async createOccurrence(data: any) {
-    return this.request('/occurrences', {
-      method: 'POST',
+    return this.request("/occurrences", {
+      method: "POST",
       body: JSON.stringify(data),
     });
   }
 
   async getOccurrences(routeId?: string) {
-    const query = routeId ? `?routeId=${routeId}` : '';
+    const query = routeId ? `?routeId=${routeId}` : "";
     return this.request(`/occurrences${query}`);
   }
 
   async getEmergencies() {
-    return this.request('/emergencies');
+    return this.request("/emergencies");
   }
 
-  // Chat
+  // =====================
+  // CHAT
+  // =====================
+
   async sendMessage(data: any) {
-    return this.request('/chat/messages', {
-      method: 'POST',
+    return this.request("/chat/messages", {
+      method: "POST",
       body: JSON.stringify(data),
     });
   }
 
   async getMessages(channelId?: string) {
-    const query = channelId ? `?channelId=${channelId}` : '';
+    const query = channelId ? `?channelId=${channelId}` : "";
     return this.request(`/chat/messages${query}`);
   }
 
-  async sendChatMessage(data: any) {
-    return this.request('/chat/messages', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
+  // =====================
+  // RELATÓRIOS
+  // =====================
 
-  async getChatMessages(routeId: string) {
-    return this.request(`/chat/messages?routeId=${routeId}`);
-  }
-
-  // Reports
   async getRoundsReport(filters: any = {}) {
     const params = new URLSearchParams(filters);
     return this.request(`/reports/rounds?${params}`);
   }
 
-  // Sync
+  // =====================
+  // SYNC
+  // =====================
+
   async sync(actions: any[]) {
-    return this.request('/sync', {
-      method: 'POST',
+    return this.request("/sync", {
+      method: "POST",
       body: JSON.stringify({ actions }),
     });
   }
