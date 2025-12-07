@@ -8,7 +8,7 @@ interface GuardProfileProps {
 }
 
 export function GuardProfile({ onBack }: GuardProfileProps) {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   // Dados mock do vigilante (em produção viriam do backend)
   const guardData = useMemo(() => ({
@@ -35,8 +35,7 @@ export function GuardProfile({ onBack }: GuardProfileProps) {
 
   const handleLogout = () => {
     if (confirm('Deseja realmente sair da sua conta?')) {
-      localStorage.removeItem('auth_user');
-      window.location.reload();
+      signOut();
     }
   };
 

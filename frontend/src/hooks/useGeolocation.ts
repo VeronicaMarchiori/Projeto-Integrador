@@ -1,5 +1,3 @@
-// Hook de geolocalização desabilitado
-// Sistema agora usa apenas registro por câmera/QR Code
 
 interface Coordinates {
   latitude: number;
@@ -8,7 +6,6 @@ interface Coordinates {
 }
 
 export function useGeolocation() {
-  // Retorna localização padrão (São Paulo) sem tentar acessar GPS
   const location: Coordinates = {
     latitude: -23.550520,
     longitude: -46.633308,
@@ -20,7 +17,7 @@ export function useGeolocation() {
   const permissionStatus = 'granted' as const;
 
   const getCurrentLocation = () => {
-    // Não faz nada - geolocalização desabilitada
+
     return Promise.resolve(location);
   };
 

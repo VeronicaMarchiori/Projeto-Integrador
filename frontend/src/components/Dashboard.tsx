@@ -1,4 +1,5 @@
-import { useState } from 'react';
+tsx
+import { useState, useEffect } from 'react';
 import { 
   Users, 
   FileText,
@@ -23,7 +24,26 @@ type MenuOption = 'employees' | 'reports' | 'create-guard' | 'clients' | 'routes
 export function Dashboard() {
   const { user, signOut } = useAuth();
   const [currentView, setCurrentView] = useState<MenuOption>('employees');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Detectar tamanho da tela e abrir sidebar automaticamente no desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
+    // Executar na montagem do componente
+    handleResize();
+
+    // Adicionar listener para mudanças de tamanho
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const menuItems = [
     { id: 'employees' as MenuOption, label: 'Gerenciar Funcionários', icon: Users },
@@ -54,39 +74,39 @@ export function Dashboard() {
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 bg-primary-700 text-white transition-all duration-300 ${
-          sidebarOpen ? 'w-64' : 'w-0 -translate-x-full'
-        }`}
+        className={`fixed lg:static inset-y-0 left-0 z-50 bg-primary-700 text-white transition-all duration-300 ${
+          sidebarOpen ? 'w-64' : 'w-0 lg:w-16'
+        } overflow-hidden`}
       >
-        <div className="flex h-full flex-col">
+        <div className="flex h-full flex-col w-64">
           {/* Logo */}
           <div className="flex items-center justify-between border-b border-primary-600 px-6 py-4">
-            <div className="flex items-center gap-2">
+            <div className={`flex items-center gap-2 transition-opacity ${sidebarOpen ? 'opacity-100' : 'opacity-0 lg:opacity-100'}`}>
               <Shield className="h-8 w-8" />
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden hover:bg-primary-600 rounded p-1"
+              className={`lg:hidden hover:bg-primary-600 rounded p-1 transition-opacity ${sidebarOpen ? 'opacity-100' : 'opacity-0'}`}
             >
               <X className="h-5 w-5" />
             </button>
           </div>
 
           {/* User Info */}
-          <div className="border-b border-primary-600 px-6 py-4">
+          <div className={`border-b border-primary-600 px-6 py-4 transition-opacity ${sidebarOpen ? 'opacity-100' : 'opacity-0'}`}>
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-500">
                 {user?.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="truncate font-medium">{user?.name}</p>
-                <p className="truncate text-sm text-primary-200">{user?.role}</p>
+                <p className="truncate font-medium !text-white">{user?.name}</p>
+                <p className="truncate text-sm !text-primary-200">{user?.role}</p>
               </div>
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto px-3 py-4">
+          <nav className={`flex-1 overflow-y-auto px-3 py-4 transition-opacity ${sidebarOpen ? 'opacity-100' : 'opacity-0'}`}>
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentView === item.id;
@@ -111,7 +131,7 @@ export function Dashboard() {
           </nav>
 
           {/* Logout */}
-          <div className="border-t border-primary-600 p-3">
+          <div className={`border-t border-primary-600 p-3 transition-opacity ${sidebarOpen ? 'opacity-100' : 'opacity-0'}`}>
             <button
               onClick={signOut}
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-primary-100 hover:bg-primary-600/50 transition-colors"
@@ -124,7 +144,7 @@ export function Dashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : ''}`}>
+      <main className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <header className="sticky top-0 z-40 border-b border-gray-200 bg-white">
           <div className="flex items-center justify-between px-6 py-4">
@@ -152,7 +172,7 @@ export function Dashboard() {
         </header>
 
         {/* Content Area */}
-        <div className="p-6">{renderContent()}</div>
+        <div className="flex-1 overflow-auto p-6">{renderContent()}</div>
       </main>
 
       {/* Mobile Overlay */}
