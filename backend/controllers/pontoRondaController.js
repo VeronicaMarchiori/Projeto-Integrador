@@ -1,9 +1,10 @@
+// EXEMPLO: pontoRondaController.js corrigido
 const express = require('express');
 const pontoRondaService = require('../service/pontoRondaService');
 
 const pontoRondaRouter = express.Router();
 
-// GET /pontos-ronda - Listar todos os pontos de ronda
+// GET /pontos-ronda
 pontoRondaRouter.get('/', async (req, res) => {
   try {
     const pontos = await pontoRondaService.retornaTodosPontosRonda();
@@ -13,26 +14,27 @@ pontoRondaRouter.get('/', async (req, res) => {
   }
 });
 
-// GET /pontos-ronda/:id - Buscar ponto de ronda por ID
+// GET /pontos-ronda/:id
 pontoRondaRouter.get('/:id', async (req, res) => {
   try {
-    const ponto = await pontoRondaService.retornaPontoRondaPorId(req.params.id);
-    if (!ponto) {
-      return res.status(404).json({ success: false, message: 'Ponto de ronda não encontrado' });
-    }
+    const ponto = await pontoRondaService.retornaPontoRondaPorId(parseInt(req.params.id));
     res.json({ success: true, data: ponto });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    if (error.message.includes('não encontrado')) {
+      res.status(404).json({ success: false, message: error.message });
+    } else {
+      res.status(500).json({ success: false, message: error.message });
+    }
   }
 });
 
-// POST /pontos-ronda - Criar novo ponto de ronda
+// POST /pontos-ronda
 pontoRondaRouter.post('/', async (req, res) => {
   try {
     const ponto = await pontoRondaService.criaPontoRonda(req.body);
     res.status(201).json({ success: true, data: ponto });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 });
 

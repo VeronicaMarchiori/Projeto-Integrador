@@ -3,79 +3,71 @@ const usuarioRepository = require("../repositories/usuarioRepositories");
 const bcrypt = require("bcryptjs");
 
 // Função para retornar todos os administradores
-const retornaTodosAdministradores = async (req, res) => {
+const retornaTodosAdministradores = async () => {
   try {
-    const administradores = await administradorRepository.obterTodosAdministradores();
-    res.status(200).json({ administradores: administradores });
+    return await administradorRepository.obterTodosAdministradores();
   } catch (error) {
     console.log("Erro ao buscar administradores:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar administradores: " + error.message);
   }
 };
 
 // Função para retornar administrador por ID
-const retornaAdministradorPorId = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+const retornaAdministradorPorId = async (idUsuario) => {
   try {
     const administrador = await administradorRepository.obterAdministradorPorId(idUsuario);
     
     if (!administrador) {
-      res.status(404).json({ message: "Administrador não encontrado" });
-    } else {
-      res.status(200).json(administrador);
+      throw new Error("Administrador não encontrado");
     }
+    
+    return administrador;
   } catch (error) {
     console.log("Erro ao buscar administrador:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar administrador: " + error.message);
   }
 };
 
 // Função para retornar administradores ativos
-const retornaAdministradoresAtivos = async (req, res) => {
+const retornaAdministradoresAtivos = async () => {
   try {
-    const administradoresAtivos = await administradorRepository.obterAdministradoresAtivos();
-    res.status(200).json({ administradores: administradoresAtivos });
+    return await administradorRepository.obterAdministradoresAtivos();
   } catch (error) {
     console.log("Erro ao buscar administradores ativos:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar administradores ativos: " + error.message);
   }
 };
 
 // Função para retornar administradores por nível de acesso
-const retornaAdministradoresPorNivel = async (req, res) => {
-  const { nivel } = req.params;
+const retornaAdministradoresPorNivel = async (nivel) => {
   const niveisValidos = ["padrao", "supervisor", "master"];
   
   try {
     if (!niveisValidos.includes(nivel)) {
-      return res.status(400).json({ 
-        message: "Nível de acesso inválido. Use: padrao, supervisor ou master" 
-      });
+      throw new Error("Nível de acesso inválido. Use: padrao, supervisor ou master");
     }
 
-    const administradores = await administradorRepository.obterAdministradoresPorNivel(nivel);
-    res.status(200).json({ administradores: administradores });
+    return await administradorRepository.obterAdministradoresPorNivel(nivel);
   } catch (error) {
     console.log("Erro ao buscar administradores por nível:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar administradores por nível: " + error.message);
   }
 };
 
 // Função para criar um novo administrador
-const criaAdministrador = async (req, res) => {
-  const { nome, email, senha, telefone, cpf, dataNascimento, nivelAcesso } = req.body;
+const criaAdministrador = async (adminData) => {
+  const { nome, email, senha, telefone, cpf, dataNascimento, nivelAcesso } = adminData;
   
   try {
     // Validações
     if (!nome || !email || !senha) {
-      return res.status(400).json({ message: "Nome, email e senha são obrigatórios" });
+      throw new Error("Nome, email e senha são obrigatórios");
     }
 
     // Verifica se email já existe
     const usuarioExistente = await usuarioRepository.obterUsuarioPorEmail(email);
     if (usuarioExistente) {
-      return res.status(400).json({ message: "Email já cadastrado no sistema" });
+      throw new Error("Email já cadastrado no sistema");
     }
 
     // Valida nível de acesso
@@ -95,7 +87,7 @@ const criaAdministrador = async (req, res) => {
       telefone: telefone || null,
       cpf: cpf || null,
       dataNascimento: dataNascimento || null,
-      status: true,
+      status: true, // CORRIGIDO: Mantém como 'status' conforme seu model
     });
 
     // Criar perfil de administrador
@@ -105,24 +97,22 @@ const criaAdministrador = async (req, res) => {
     });
 
     // Retornar administrador completo
-    const administradorCriado = await administradorRepository.obterAdministradorPorId(novoUsuario.idUsuario);
-    res.status(201).json(administradorCriado);
+    return await administradorRepository.obterAdministradorPorId(novoUsuario.idUsuario);
   } catch (error) {
     console.log("Erro ao criar administrador:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao criar administrador: " + error.message);
   }
 };
 
 // Função para atualizar administrador
-const atualizaAdministrador = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  const { nome, email, telefone, cpf, dataNascimento, nivelAcesso, senha, status } = req.body;
+const atualizaAdministrador = async (idUsuario, adminData) => {
+  const { nome, email, telefone, cpf, dataNascimento, nivelAcesso, senha, status } = adminData;
   
   try {
     // Verifica se administrador existe
     const adminExistente = await administradorRepository.obterAdministradorPorId(idUsuario);
     if (!adminExistente) {
-      return res.status(404).json({ message: "Administrador não encontrado" });
+      throw new Error("Administrador não encontrado");
     }
 
     // Atualizar dados do usuário se fornecidos
@@ -132,7 +122,7 @@ const atualizaAdministrador = async (req, res) => {
       // Verifica se email já está em uso por outro usuário
       const usuarioComEmail = await usuarioRepository.obterUsuarioPorEmail(email);
       if (usuarioComEmail && usuarioComEmail.idUsuario !== idUsuario) {
-        return res.status(400).json({ message: "Email já está em uso por outro usuário" });
+        throw new Error("Email já está em uso por outro usuário");
       }
       dadosUsuario.email = email;
     }
@@ -152,66 +142,54 @@ const atualizaAdministrador = async (req, res) => {
     if (nivelAcesso) {
       const niveisValidos = ["padrao", "supervisor", "master"];
       if (!niveisValidos.includes(nivelAcesso)) {
-        return res.status(400).json({ 
-          message: "Nível de acesso inválido. Use: padrao, supervisor ou master" 
-        });
+        throw new Error("Nível de acesso inválido. Use: padrao, supervisor ou master");
       }
 
       await administradorRepository.atualizaNivelAcesso(idUsuario, nivelAcesso);
     }
 
     // Retornar administrador atualizado
-    const administradorAtualizado = await administradorRepository.obterAdministradorPorId(idUsuario);
-    res.status(200).json(administradorAtualizado);
+    return await administradorRepository.obterAdministradorPorId(idUsuario);
   } catch (error) {
     console.log("Erro ao atualizar administrador:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao atualizar administrador: " + error.message);
   }
 };
 
 // Função para atualizar nível de acesso
-const atualizaNivelAcesso = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  const { nivelAcesso } = req.body;
+const atualizaNivelAcesso = async (idUsuario, nivelAcesso) => {
   const niveisValidos = ["padrao", "supervisor", "master"];
   
   try {
     if (!niveisValidos.includes(nivelAcesso)) {
-      return res.status(400).json({ 
-        message: "Nível de acesso inválido. Use: padrao, supervisor ou master" 
-      });
+      throw new Error("Nível de acesso inválido. Use: padrao, supervisor ou master");
     }
 
     const admin = await administradorRepository.obterAdministradorPorId(idUsuario);
     if (!admin) {
-      return res.status(404).json({ message: "Administrador não encontrado" });
+      throw new Error("Administrador não encontrado");
     }
 
-    const administradorAtualizado = await administradorRepository.atualizaNivelAcesso(idUsuario, nivelAcesso);
-    res.status(200).json(administradorAtualizado);
+    return await administradorRepository.atualizaNivelAcesso(idUsuario, nivelAcesso);
   } catch (error) {
     console.log("Erro ao atualizar nível de acesso:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao atualizar nível de acesso: " + error.message);
   }
 };
 
 // Função para deletar administrador
-const deletaAdministrador = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+const deletaAdministrador = async (idUsuario) => {
   try {
     const admin = await administradorRepository.obterAdministradorPorId(idUsuario);
     if (!admin) {
-      return res.status(404).json({ message: "Administrador não encontrado" });
+      throw new Error("Administrador não encontrado");
     }
 
     // Verifica se é o último administrador master
     if (admin.nivelAcesso === "master") {
       const adminsMaster = await administradorRepository.obterAdministradoresPorNivel("master");
       if (adminsMaster.length === 1) {
-        return res.status(400).json({ 
-          message: "Não é possível deletar o último administrador master do sistema" 
-        });
+        throw new Error("Não é possível deletar o último administrador master do sistema");
       }
     }
 
@@ -219,134 +197,115 @@ const deletaAdministrador = async (req, res) => {
     const deletado = await administradorRepository.deletaAdministrador(idUsuario);
 
     if (!deletado) {
-      return res.status(500).json({ message: "Erro ao deletar administrador" });
+      throw new Error("Erro ao deletar administrador");
     }
 
     // Deleta usuário
     await usuarioRepository.deletaUsuario(idUsuario);
 
-    res.status(200).json({ message: "Administrador deletado com sucesso" });
+    return { message: "Administrador deletado com sucesso" };
   } catch (error) {
     console.log("Erro ao deletar administrador:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao deletar administrador: " + error.message);
   }
 };
 
 // Função para inativar administrador
-const inativaAdministrador = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+const inativaAdministrador = async (idUsuario) => {
   try {
     const adminExistente = await administradorRepository.obterAdministradorPorId(idUsuario);
     if (!adminExistente) {
-      return res.status(404).json({ message: "Administrador não encontrado" });
+      throw new Error("Administrador não encontrado");
     }
 
     await usuarioRepository.atualizaUsuario(idUsuario, { status: false });
-    const administradorAtualizado = await administradorRepository.obterAdministradorPorId(idUsuario);
-    
-    res.status(200).json(administradorAtualizado);
+    return await administradorRepository.obterAdministradorPorId(idUsuario);
   } catch (error) {
     console.log("Erro ao inativar administrador:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao inativar administrador: " + error.message);
   }
 };
 
 // Função para ativar administrador
-const ativaAdministrador = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+const ativaAdministrador = async (idUsuario) => {
   try {
     const adminExistente = await administradorRepository.obterAdministradorPorId(idUsuario);
     if (!adminExistente) {
-      return res.status(404).json({ message: "Administrador não encontrado" });
+      throw new Error("Administrador não encontrado");
     }
 
     await usuarioRepository.atualizaUsuario(idUsuario, { status: true });
-    const administradorAtualizado = await administradorRepository.obterAdministradorPorId(idUsuario);
-    
-    res.status(200).json(administradorAtualizado);
+    return await administradorRepository.obterAdministradorPorId(idUsuario);
   } catch (error) {
     console.log("Erro ao ativar administrador:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao ativar administrador: " + error.message);
   }
 };
 
 // Função para retornar rondas criadas pelo administrador
-const retornaRondasDoAdministrador = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+const retornaRondasDoAdministrador = async (idUsuario) => {
   try {
     const admin = await administradorRepository.obterAdministradorPorId(idUsuario);
     if (!admin) {
-      return res.status(404).json({ message: "Administrador não encontrado" });
+      throw new Error("Administrador não encontrado");
     }
 
-    const rondas = await administradorRepository.obterRondasDoAdministrador(idUsuario);
-    res.status(200).json({ rondas: rondas });
+    return await administradorRepository.obterRondasDoAdministrador(idUsuario);
   } catch (error) {
     console.log("Erro ao buscar rondas do administrador:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar rondas do administrador: " + error.message);
   }
 };
 
 // Função para retornar estatísticas do administrador
-const retornaEstatisticasAdministrador = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+const retornaEstatisticasAdministrador = async (idUsuario) => {
   try {
     const estatisticas = await administradorRepository.obterEstatisticasAdministrador(idUsuario);
     
     if (!estatisticas) {
-      res.status(404).json({ message: "Administrador não encontrado" });
-    } else {
-      res.status(200).json(estatisticas);
+      throw new Error("Administrador não encontrado");
     }
+    
+    return estatisticas;
   } catch (error) {
     console.log("Erro ao buscar estatísticas do administrador:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar estatísticas do administrador: " + error.message);
   }
 };
 
 // Função para verificar se é administrador master
-const verificaAdministradorMaster = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+const verificaAdministradorMaster = async (idUsuario) => {
   try {
     const isMaster = await administradorRepository.isAdministradorMaster(idUsuario);
-    res.status(200).json({ isMaster: isMaster });
+    return isMaster;
   } catch (error) {
     console.log("Erro ao verificar administrador master:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao verificar administrador master: " + error.message);
   }
 };
 
 // Função para retornar dashboard do administrador
-const retornaDashboardAdministrador = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+const retornaDashboardAdministrador = async (idUsuario) => {
   try {
     const dashboard = await administradorRepository.obterDashboardAdministrador(idUsuario);
     
     if (!dashboard) {
-      res.status(404).json({ message: "Administrador não encontrado" });
-    } else {
-      res.status(200).json(dashboard);
+      throw new Error("Administrador não encontrado");
     }
+    
+    return dashboard;
   } catch (error) {
     console.log("Erro ao buscar dashboard do administrador:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar dashboard do administrador: " + error.message);
   }
 };
 
 // Função para promover administrador para nível superior
-const promoveAdministrador = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+const promoveAdministrador = async (idUsuario) => {
   try {
     const admin = await administradorRepository.obterAdministradorPorId(idUsuario);
     if (!admin) {
-      return res.status(404).json({ message: "Administrador não encontrado" });
+      throw new Error("Administrador não encontrado");
     }
 
     let novoNivel;
@@ -358,36 +317,31 @@ const promoveAdministrador = async (req, res) => {
         novoNivel = "master";
         break;
       case "master":
-        return res.status(400).json({ message: "Administrador já está no nível máximo" });
+        throw new Error("Administrador já está no nível máximo");
       default:
-        return res.status(400).json({ message: "Nível de acesso inválido" });
+        throw new Error("Nível de acesso inválido");
     }
 
-    const administradorAtualizado = await administradorRepository.atualizaNivelAcesso(idUsuario, novoNivel);
-    res.status(200).json(administradorAtualizado);
+    return await administradorRepository.atualizaNivelAcesso(idUsuario, novoNivel);
   } catch (error) {
     console.log("Erro ao promover administrador:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao promover administrador: " + error.message);
   }
 };
 
 // Função para rebaixar administrador para nível inferior
-const rebaixaAdministrador = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+const rebaixaAdministrador = async (idUsuario) => {
   try {
     const admin = await administradorRepository.obterAdministradorPorId(idUsuario);
     if (!admin) {
-      return res.status(404).json({ message: "Administrador não encontrado" });
+      throw new Error("Administrador não encontrado");
     }
 
     // Verifica se é o último master
     if (admin.nivelAcesso === "master") {
       const adminsMaster = await administradorRepository.obterAdministradoresPorNivel("master");
       if (adminsMaster.length === 1) {
-        return res.status(400).json({ 
-          message: "Não é possível rebaixar o último administrador master do sistema" 
-        });
+        throw new Error("Não é possível rebaixar o último administrador master do sistema");
       }
     }
 
@@ -400,39 +354,35 @@ const rebaixaAdministrador = async (req, res) => {
         novoNivel = "padrao";
         break;
       case "padrao":
-        return res.status(400).json({ message: "Administrador já está no nível mínimo" });
+        throw new Error("Administrador já está no nível mínimo");
       default:
-        return res.status(400).json({ message: "Nível de acesso inválido" });
+        throw new Error("Nível de acesso inválido");
     }
 
-    const administradorAtualizado = await administradorRepository.atualizaNivelAcesso(idUsuario, novoNivel);
-    res.status(200).json(administradorAtualizado);
+    return await administradorRepository.atualizaNivelAcesso(idUsuario, novoNivel);
   } catch (error) {
     console.log("Erro ao rebaixar administrador:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao rebaixar administrador: " + error.message);
   }
 };
 
 // Função para validar permissões do administrador
-const validaPermissoesAdministrador = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  const { acaoRequerida } = req.body;
-  
+const validaPermissoesAdministrador = async (idUsuario, acaoRequerida) => {
   try {
     const admin = await administradorRepository.obterAdministradorPorId(idUsuario);
     
     if (!admin) {
-      return res.status(200).json({ 
+      return { 
         permitido: false, 
         motivo: "Administrador não encontrado" 
-      });
+      };
     }
 
     if (!admin.Usuario || !admin.Usuario.status) {
-      return res.status(200).json({ 
+      return { 
         permitido: false, 
         motivo: "Administrador inativo" 
-      });
+      };
     }
 
     // Define permissões por nível
@@ -445,16 +395,16 @@ const validaPermissoesAdministrador = async (req, res) => {
     const permissoesNivel = permissoes[admin.nivelAcesso] || [];
 
     if (permissoesNivel.includes("todas") || permissoesNivel.includes(acaoRequerida)) {
-      return res.status(200).json({ permitido: true, nivel: admin.nivelAcesso });
+      return { permitido: true, nivel: admin.nivelAcesso };
     }
 
-    res.status(200).json({ 
+    return { 
       permitido: false, 
       motivo: `Nível ${admin.nivelAcesso} não tem permissão para: ${acaoRequerida}` 
-    });
+    };
   } catch (error) {
     console.log("Erro ao validar permissões do administrador:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao validar permissões do administrador: " + error.message);
   }
 };
 

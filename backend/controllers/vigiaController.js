@@ -3,11 +3,6 @@ const vigiaService = require('../service/vigiaService');
 
 const vigiaRouter = express.Router();
 
-/**
- * VIGIA CONTROLLER
- * Gerencia as requisições HTTP relacionadas aos Vigias
- */
-
 // GET /vigias - Retorna todos os vigias
 vigiaRouter.get('/', async (req, res) => {
   try {
@@ -136,34 +131,6 @@ vigiaRouter.put('/:id', async (req, res) => {
   }
 });
 
-// PATCH /vigias/:id/foto - Atualiza foto do vigia
-vigiaRouter.patch('/:id/foto', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { foto } = req.body;
-    
-    if (!foto) {
-      return res.status(400).json({
-        success: false,
-        message: 'Foto é obrigatória',
-      });
-    }
-
-    const vigia = await vigiaService.atualizaFotoVigia(parseInt(id), foto);
-    return res.status(200).json({
-      success: true,
-      message: 'Foto atualizada com sucesso',
-      data: vigia,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      message: 'Erro ao atualizar foto',
-      error: error.message,
-    });
-  }
-});
-
 // POST /vigias/:id/iniciar-ronda - Inicia ronda
 vigiaRouter.post('/:id/iniciar-ronda', async (req, res) => {
   try {
@@ -215,44 +182,6 @@ vigiaRouter.delete('/:id', async (req, res) => {
     return res.status(400).json({
       success: false,
       message: 'Erro ao deletar vigia',
-      error: error.message,
-    });
-  }
-});
-
-// PATCH /vigias/:id/inativar - Inativa vigia
-vigiaRouter.patch('/:id/inativar', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const vigia = await vigiaService.inativaVigia(parseInt(id));
-    return res.status(200).json({
-      success: true,
-      message: 'Vigia inativado com sucesso',
-      data: vigia,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      message: 'Erro ao inativar vigia',
-      error: error.message,
-    });
-  }
-});
-
-// PATCH /vigias/:id/ativar - Ativa vigia
-vigiaRouter.patch('/:id/ativar', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const vigia = await vigiaService.ativaVigia(parseInt(id));
-    return res.status(200).json({
-      success: true,
-      message: 'Vigia ativado com sucesso',
-      data: vigia,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      message: 'Erro ao ativar vigia',
       error: error.message,
     });
   }

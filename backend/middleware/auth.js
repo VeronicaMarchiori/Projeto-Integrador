@@ -1,14 +1,9 @@
 const jwt = require("jsonwebtoken");
 
 /**
- * ============================================
  * MIDDLEWARE DE AUTENTICAÇÃO E AUTORIZAÇÃO
- * ============================================
- * 
- * FINALIDADE:
- * - Validar tokens JWT nas requisições
- * - Proteger rotas autenticadas
- * - Controlar acesso por tipo de usuário
+ * - Validar tokens JWT nas requisições, proteger rotas autenticadas e 
+ * controlar acesso por tipo de usuário
  */
 
 /**

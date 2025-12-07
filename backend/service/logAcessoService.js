@@ -1,79 +1,68 @@
 const logAcessoRepository = require("../repositories/logAcessoRepositories");
 
 // Função para retornar todos os logs de acesso
-const retornaTodosLogsAcesso = async (req, res) => {
-  const usuarioId = req.query.usuarioId ? parseInt(req.query.usuarioId) : null;
-  const sucesso = req.query.sucesso !== undefined ? req.query.sucesso === 'true' : null;
-  
+const retornaTodosLogsAcesso = async (usuarioId = null, sucesso = null) => {
   try {
-    const logsAcesso = await logAcessoRepository.obterTodosLogsAcesso(usuarioId, sucesso);
-    res.status(200).json({ logsAcesso: logsAcesso });
+    return await logAcessoRepository.obterTodosLogsAcesso(usuarioId, sucesso);
   } catch (error) {
     console.log("Erro ao buscar logs de acesso:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar logs de acesso: " + error.message);
   }
 };
 
 // Função para retornar log de acesso por ID
-const retornaLogAcessoPorId = async (req, res) => {
-  const idLogA = parseInt(req.params.id);
-  
+const retornaLogAcessoPorId = async (idLogA) => {
   try {
     const logAcesso = await logAcessoRepository.obterLogAcessoPorId(idLogA);
     
     if (!logAcesso) {
-      res.status(404).json({ message: "Log de acesso não encontrado" });
-    } else {
-      res.status(200).json(logAcesso);
+      throw new Error("Log de acesso não encontrado");
     }
+    
+    return logAcesso;
   } catch (error) {
     console.log("Erro ao buscar log de acesso:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar log de acesso: " + error.message);
   }
 };
 
 // Função para criar um log de acesso
-const criaLogAcesso = async (req, res) => {
-  const logData = req.body;
-  
+const criaLogAcesso = async (logData) => {
   try {
-    const logAcessoCriado = await logAcessoRepository.criaLogAcesso(logData);
-    res.status(201).json(logAcessoCriado);
+    return await logAcessoRepository.criaLogAcesso(logData);
   } catch (error) {
     console.log("Erro ao criar log de acesso:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao criar log de acesso: " + error.message);
   }
 };
 
 // Função para deletar um log de acesso
-const deletaLogAcesso = async (req, res) => {
-  const idLogA = parseInt(req.params.id);
-  
+const deletaLogAcesso = async (idLogA) => {
   try {
     const logAcessoDeletado = await logAcessoRepository.deletaLogAcesso(idLogA);
     
     if (!logAcessoDeletado) {
-      res.status(404).json({ message: "Log de acesso não encontrado" });
-    } else {
-      res.status(200).json({ message: "Log de acesso deletado com sucesso" });
+      throw new Error("Log de acesso não encontrado");
     }
+    
+    return { message: "Log de acesso deletado com sucesso" };
   } catch (error) {
     console.log("Erro ao deletar log de acesso:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao deletar log de acesso: " + error.message);
   }
 };
 
 // Função para limpar logs antigos
-const limparLogsAntigos = async (req, res) => {
+const limparLogsAntigos = async () => {
   try {
     const logsLimpos = await logAcessoRepository.limparLogsAntigos();
-    res.status(200).json({ 
+    return { 
       message: "Logs antigos limpos com sucesso",
       quantidade: logsLimpos 
-    });
+    };
   } catch (error) {
     console.log("Erro ao limpar logs antigos:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao limpar logs antigos: " + error.message);
   }
 };
 

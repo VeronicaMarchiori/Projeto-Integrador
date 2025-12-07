@@ -3,6 +3,9 @@ const cors = require("cors");
 const session = require("express-session");
 const passport = require("passport");
 
+// Importar configuração do Passport
+require("./config/passportConfig"); 
+
 // Controllers
 const authController = require("./controllers/authController");
 const empresaController = require("./controllers/empresaController");
@@ -35,7 +38,10 @@ app.use(
     secret: process.env.SESSION_SECRET || "sistema_rondas_secret_key_2024",
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false }, // false para desenvolvimento (true requer HTTPS)
+    cookie: { 
+      secure: false, // false para desenvolvimento
+      maxAge: 24 * 60 * 60 * 1000 // 24 horas
+    },
   })
 );
 
@@ -57,15 +63,17 @@ app.get("/", (req, res) => {
     version: "1.0.0",
     status: "online",
     endpoints: {
-      auth: "/api/auth",
-      empresas: "/api/empresas",
-      usuarios: "/api/usuarios",
-      rondas: "/api/rondas",
-      pontosRonda: "/api/pontos-ronda",
-      percursos: "/api/percursos",
-      ocorrencias: "/api/ocorrencias",
-      mensagens: "/api/mensagens",
-      logsAcesso: "/api/logs-acesso",
+      auth: "/auth",
+      empresas: "/empresas",
+      usuarios: "/usuarios",
+      rondas: "/rondas",
+      pontosRonda: "/pontos-ronda",
+      percursos: "/percursos",
+      ocorrencias: "/ocorrencias",
+      mensagens: "/mensagens",
+      logsAcesso: "/logs-acesso",
+      vigias: "/vigias",
+      administradores: "/administradores",
     },
   });
 });
@@ -80,17 +88,17 @@ app.get("/health", (req, res) => {
 });
 
 // Rotas da API
-app.use("/api/auth", authController);
-app.use("/api/empresas", empresaController);
-app.use("/api/usuarios", usuarioController);
-app.use("/api/rondas", rondaController);
-app.use("/api/pontos-ronda", pontoRondaController);
-app.use("/api/percursos", percursoController);
-app.use("/api/ocorrencias", ocorrenciaController);
-app.use("/api/mensagens", mensagemController);
-app.use("/api/logs-acesso", logAcessoController);
-app.use("/api/vigias", vigiaController);
-app.use("/api/administradores", administradorController);
+app.use("/auth", authController);
+app.use("/empresas", empresaController);
+app.use("/usuarios", usuarioController);
+app.use("/rondas", rondaController);
+app.use("/pontos-ronda", pontoRondaController);
+app.use("/percursos", percursoController);
+app.use("/ocorrencias", ocorrenciaController);
+app.use("/mensagens", mensagemController);
+app.use("/logs-acesso", logAcessoController);
+app.use("/vigias", vigiaController);
+app.use("/administradores", administradorController);
 
 // Rota 404
 app.use((req, res) => {
@@ -108,29 +116,6 @@ app.use((err, req, res, next) => {
     error: err.message || "Erro interno do servidor",
   });
 });
-
-// Porta do servidor
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`Servidor está rodando na porta ${PORT}.`));
-
-// Inicializar servidor
-const startServer = async () => {
-  try {
-    // Sincronizar banco de dados
-    await db.sequelize.sync({ alter: true });
-    console.log(" Banco de dados sincronizado");
-
-    // Inserir dados iniciais
-    await seedDatabase();
-
-    // Iniciar servidor
-    app.listen(PORT, () => console.log(`Servidor está rodando na porta ${PORT}.`));
-
-  } catch (error) {
-    console.error(" Erro ao iniciar servidor:", error);
-    process.exit(1);
-  }
-};
 
 // Função para inserir dados iniciais
 const seedDatabase = async () => {
@@ -186,13 +171,38 @@ const seedDatabase = async () => {
         telefone: "(11) 3333-3333",
         email: "contato@empresa.com",
       });
-
-      console.log("Dados iniciais inseridos com sucesso");
-      console.log("Admin - Email: admin@admin.com | Senha: admin");
-      console.log("Vigia - Email: vigilante@vigilante.com | Senha: vigilante");
+      
+      console.log(" Dados iniciais inseridos com sucesso");
+      console.log(" Admin - Login: admin | Senha: admin");
+      console.log(" Vigia - Login: vigilante | Senha: vigilante");
     }
   } catch (error) {
-    console.error("Erro ao inserir dados iniciais:", error);
+    console.error(" Erro ao inserir dados iniciais:", error);
+  }
+};
+
+// Porta do servidor
+const PORT = process.env.PORT || 3001;
+
+// Inicializar servidor
+const startServer = async () => {
+  try {
+    // Sincronizar banco de dados
+    await db.sequelize.sync();
+    console.log(" Banco de dados sincronizado");
+
+    // Inserir dados iniciais
+    await seedDatabase();
+
+    // Iniciar servidor (APENAS UMA VEZ)
+    app.listen(PORT, () => {
+      console.log(` Servidor rodando na porta ${PORT}`);
+      console.log(` API disponível em: http://localhost:${PORT}`);
+    });
+
+  } catch (error) {
+    console.error(" Erro ao iniciar servidor:", error);
+    process.exit(1);
   }
 };
 

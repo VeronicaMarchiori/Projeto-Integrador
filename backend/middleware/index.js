@@ -1,15 +1,10 @@
 /**
- * ============================================
  * MIDDLEWARES GERAIS DO SISTEMA
- * ============================================
- * 
  * Contém: CORS, Error Handler, Logger
  */
 
 /**
- * ============================================
  * CORS MIDDLEWARE
- * ============================================
  * Permite que o frontend React acesse o backend
  */
 const corsMiddleware = (req, res, next) => {
@@ -45,13 +40,11 @@ const corsMiddleware = (req, res, next) => {
 };
 
 /**
- * ============================================
  * ERROR HANDLER
- * ============================================
  * Captura e formata todos os erros da aplicação
  */
 const errorHandler = (error, req, res, next) => {
-  console.error("❌ Erro:", error.message);
+  console.error(" Erro:", error.message);
 
   const isDevelopment = process.env.NODE_ENV === "development";
   const statusCode = error.statusCode || 500;
@@ -75,9 +68,7 @@ const errorHandler = (error, req, res, next) => {
 };
 
 /**
- * ============================================
  * NOT FOUND HANDLER (404)
- * ============================================
  * Captura requisições para rotas inexistentes
  */
 const notFoundHandler = (req, res, next) => {
@@ -87,9 +78,7 @@ const notFoundHandler = (req, res, next) => {
 };
 
 /**
- * ============================================
  * LOGGER MIDDLEWARE
- * ============================================
  * Registra todas as requisições no console
  */
 const requestLogger = (req, res, next) => {
@@ -112,9 +101,7 @@ const requestLogger = (req, res, next) => {
 };
 
 /**
- * ============================================
  * ASYNC HANDLER
- * ============================================
  * Wrapper para capturar erros de funções assíncronas
  */
 const asyncHandler = (fn) => {

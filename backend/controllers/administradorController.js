@@ -113,34 +113,6 @@ administradorRouter.put('/:id', async (req, res) => {
   }
 });
 
-// PATCH /administradores/:id/nivel - Atualiza nível de acesso
-administradorRouter.patch('/:id/nivel', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { nivelAcesso } = req.body;
-    
-    if (!nivelAcesso) {
-      return res.status(400).json({
-        success: false,
-        message: 'Nível de acesso é obrigatório',
-      });
-    }
-
-    const admin = await administradorService.atualizaNivelAcesso(parseInt(id), nivelAcesso);
-    return res.status(200).json({
-      success: true,
-      message: 'Nível de acesso atualizado com sucesso',
-      data: admin,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      message: 'Erro ao atualizar nível de acesso',
-      error: error.message,
-    });
-  }
-});
-
 // DELETE /administradores/:id - Deleta administrador
 administradorRouter.delete('/:id', async (req, res) => {
   try {
@@ -154,44 +126,6 @@ administradorRouter.delete('/:id', async (req, res) => {
     return res.status(400).json({
       success: false,
       message: 'Erro ao deletar administrador',
-      error: error.message,
-    });
-  }
-});
-
-// PATCH /administradores/:id/inativar - Inativa administrador
-administradorRouter.patch('/:id/inativar', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const admin = await administradorService.inativaAdministrador(parseInt(id));
-    return res.status(200).json({
-      success: true,
-      message: 'Administrador inativado com sucesso',
-      data: admin,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      message: 'Erro ao inativar administrador',
-      error: error.message,
-    });
-  }
-});
-
-// PATCH /administradores/:id/ativar - Ativa administrador
-administradorRouter.patch('/:id/ativar', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const admin = await administradorService.ativaAdministrador(parseInt(id));
-    return res.status(200).json({
-      success: true,
-      message: 'Administrador ativado com sucesso',
-      data: admin,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      message: 'Erro ao ativar administrador',
       error: error.message,
     });
   }

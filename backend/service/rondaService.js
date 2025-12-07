@@ -2,37 +2,33 @@ const rondaRepository = require("../repositories/rondaRepositories");
 const model = require("../models");
 
 // Função para retornar todas as rondas
-const retornaTodasRondas = async (req, res) => {
+const retornaTodasRondas = async () => {
   try {
-    const rondas = await rondaRepository.obterTodasRondas();
-    res.status(200).json({ rondas: rondas });
+    return await rondaRepository.obterTodasRondas();
   } catch (error) {
     console.log("Erro ao buscar rondas:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar rondas: " + error.message);
   }
 };
 
 // Função para retornar ronda por ID
-const retornaRondaPorId = async (req, res) => {
-  const idRonda = parseInt(req.params.id);
-  
+const retornaRondaPorId = async (idRonda) => {
   try {
     const ronda = await rondaRepository.obterRondaPorId(idRonda);
     
     if (!ronda) {
-      res.status(404).json({ message: "Ronda não encontrada" });
-    } else {
-      res.status(200).json(ronda);
+      throw new Error("Ronda não encontrada");
     }
+    
+    return ronda;
   } catch (error) {
     console.log("Erro ao buscar ronda:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar ronda: " + error.message);
   }
 };
 
 // Função para criar uma ronda
-const criaRonda = async (req, res) => {
-  const rondaData = req.body;
+const criaRonda = async (rondaData) => {
   const { pontos, ...dadosRonda } = rondaData;
   
   try {
@@ -53,90 +49,86 @@ const criaRonda = async (req, res) => {
       }
     }
     
-    const rondaCriada = await rondaRepository.obterRondaPorId(ronda.idRonda);
-    res.status(201).json(rondaCriada);
+    return await rondaRepository.obterRondaPorId(ronda.idRonda);
   } catch (error) {
     console.log("Erro ao criar ronda:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao criar ronda: " + error.message);
   }
 };
 
 // Função para atualizar uma ronda
-const atualizaRonda = async (req, res) => {
-  const idRonda = parseInt(req.params.id);
-  const rondaData = req.body;
-  
+const atualizaRonda = async (idRonda, rondaData) => {
   try {
     const rondaAtualizada = await rondaRepository.atualizaRonda(idRonda, rondaData);
     
     if (!rondaAtualizada) {
-      res.status(404).json({ message: "Ronda não encontrada" });
-    } else {
-      res.status(200).json(rondaAtualizada);
+      throw new Error("Ronda não encontrada");
     }
+    
+    return rondaAtualizada;
   } catch (error) {
     console.log("Erro ao atualizar ronda:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao atualizar ronda: " + error.message);
   }
 };
 
 // Função para deletar uma ronda
-const deletaRonda = async (req, res) => {
-  const idRonda = parseInt(req.params.id);
-  
+const deletaRonda = async (idRonda) => {
   try {
     const rondaDeletada = await rondaRepository.deletaRonda(idRonda);
     
     if (!rondaDeletada) {
-      res.status(404).json({ message: "Ronda não encontrada" });
-    } else {
-      res.status(200).json({ message: "Ronda deletada com sucesso" });
+      throw new Error("Ronda não encontrada");
     }
+    
+    return { message: "Ronda deletada com sucesso" };
   } catch (error) {
     console.log("Erro ao deletar ronda:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao deletar ronda: " + error.message);
   }
 };
 
 // Função para adicionar ponto a uma ronda
-const adicionaPontoRonda = async (req, res) => {
-  const idRonda = parseInt(req.params.idRonda);
-  const idPonto = parseInt(req.params.idPonto);
-  
+const adicionaPontoRonda = async (idRonda, idPonto) => {
   try {
     const ronda = await model.Ronda.findByPk(idRonda);
     const ponto = await model.PontoRonda.findByPk(idPonto);
     
-    if (!ronda || !ponto) {
-      return res.status(404).json({ message: "Ronda ou ponto não encontrado" });
+    if (!ronda) {
+      throw new Error("Ronda não encontrada");
+    }
+    
+    if (!ponto) {
+      throw new Error("Ponto não encontrado");
     }
     
     await ronda.addPontoRonda(ponto);
-    res.status(200).json({ message: "Ponto adicionado à ronda com sucesso" });
+    return { message: "Ponto adicionado à ronda com sucesso" };
   } catch (error) {
     console.log("Erro ao adicionar ponto à ronda:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao adicionar ponto à ronda: " + error.message);
   }
 };
 
 // Função para remover ponto de uma ronda
-const removePontoRonda = async (req, res) => {
-  const idRonda = parseInt(req.params.idRonda);
-  const idPonto = parseInt(req.params.idPonto);
-  
+const removePontoRonda = async (idRonda, idPonto) => {
   try {
     const ronda = await model.Ronda.findByPk(idRonda);
     const ponto = await model.PontoRonda.findByPk(idPonto);
     
-    if (!ronda || !ponto) {
-      return res.status(404).json({ message: "Ronda ou ponto não encontrado" });
+    if (!ronda) {
+      throw new Error("Ronda não encontrada");
+    }
+    
+    if (!ponto) {
+      throw new Error("Ponto não encontrado");
     }
     
     await ronda.removePontoRonda(ponto);
-    res.status(200).json({ message: "Ponto removido da ronda com sucesso" });
+    return { message: "Ponto removido da ronda com sucesso" };
   } catch (error) {
     console.log("Erro ao remover ponto da ronda:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao remover ponto da ronda: " + error.message);
   }
 };
 

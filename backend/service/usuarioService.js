@@ -1,57 +1,43 @@
 const usuarioRepository = require("../repositories/usuarioRepositories");
 const bcrypt = require("bcryptjs");
 
-// Função para retornar todos os usuários
-const retornaTodosUsuarios = async (req, res) => {
+// Função para retornar todos os usuários (SEM req, res)
+const retornaTodosUsuarios = async () => {
   try {
-    const usuarios = await usuarioRepository.obterTodosUsuarios();
-    res.status(200).json({ usuarios: usuarios });
+    return await usuarioRepository.obterTodosUsuarios();
   } catch (error) {
     console.log("Erro ao buscar usuários:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar usuários: " + error.message);
   }
 };
 
-// Função para retornar usuário por ID
-const retornaUsuarioPorId = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+// Função para retornar usuário por ID (SEM req, res)
+const retornaUsuarioPorId = async (idUsuario) => {
   try {
     const usuario = await usuarioRepository.obterUsuarioPorId(idUsuario);
-    
     if (!usuario) {
-      res.status(404).json({ message: "Usuário não encontrado" });
-    } else {
-      res.status(200).json(usuario);
+      throw new Error("Usuário não encontrado");
     }
+    return usuario;
   } catch (error) {
     console.log("Erro ao buscar usuário:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar usuário: " + error.message);
   }
 };
 
-// Função para retornar usuário por email
-const retornaUsuarioPorEmail = async (req, res) => {
-  const { email } = req.params;
-  
+// Função para retornar usuário por email (SEM req, res)
+const retornaUsuarioPorEmail = async (email) => {
   try {
     const usuario = await usuarioRepository.obterUsuarioPorEmail(email);
-    
-    if (!usuario) {
-      res.status(404).json({ message: "Usuário não encontrado" });
-    } else {
-      res.status(200).json(usuario);
-    }
+    return usuario; // pode retornar null se não encontrar
   } catch (error) {
     console.log("Erro ao buscar usuário por email:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar usuário por email: " + error.message);
   }
 };
 
-// Função para criar um usuário
-const criaUsuario = async (req, res) => {
-  const usuarioData = req.body;
-  
+// Função para criar um usuário (SEM req, res)
+const criaUsuario = async (usuarioData) => {
   try {
     // Hash da senha
     if (usuarioData.senha) {
@@ -75,19 +61,15 @@ const criaUsuario = async (req, res) => {
       });
     }
     
-    const usuarioCriado = await usuarioRepository.obterUsuarioPorId(usuario.idUsuario);
-    res.status(201).json(usuarioCriado);
+    return await usuarioRepository.obterUsuarioPorId(usuario.idUsuario);
   } catch (error) {
     console.log("Erro ao criar usuário:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao criar usuário: " + error.message);
   }
 };
 
-// Função para atualizar um usuário
-const atualizaUsuario = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  const usuarioData = req.body;
-  
+// Função para atualizar um usuário (SEM req, res)
+const atualizaUsuario = async (idUsuario, usuarioData) => {
   try {
     // Hash da senha se for atualizada
     if (usuarioData.senha) {
@@ -98,7 +80,7 @@ const atualizaUsuario = async (req, res) => {
     const usuario = await usuarioRepository.atualizaUsuario(idUsuario, usuarioData);
     
     if (!usuario) {
-      return res.status(404).json({ message: "Usuário não encontrado" });
+      throw new Error("Usuário não encontrado");
     }
     
     // Atualizar perfil específico se fornecido
@@ -116,64 +98,56 @@ const atualizaUsuario = async (req, res) => {
       await usuarioRepository.atualizaVigia(idUsuario, vigiaData);
     }
     
-    const usuarioAtualizado = await usuarioRepository.obterUsuarioPorId(idUsuario);
-    res.status(200).json(usuarioAtualizado);
+    return await usuarioRepository.obterUsuarioPorId(idUsuario);
   } catch (error) {
     console.log("Erro ao atualizar usuário:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao atualizar usuário: " + error.message);
   }
 };
 
-// Função para deletar um usuário
-const deletaUsuario = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+// Função para deletar um usuário (SEM req, res)
+const deletaUsuario = async (idUsuario) => {
   try {
     const usuarioDeletado = await usuarioRepository.deletaUsuario(idUsuario);
     
     if (!usuarioDeletado) {
-      res.status(404).json({ message: "Usuário não encontrado" });
-    } else {
-      res.status(200).json({ message: "Usuário deletado com sucesso" });
+      throw new Error("Usuário não encontrado");
     }
+    
+    return { message: "Usuário deletado com sucesso" };
   } catch (error) {
     console.log("Erro ao deletar usuário:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao deletar usuário: " + error.message);
   }
 };
 
-// Função para retornar todos os vigias
-const retornaTodosVigias = async (req, res) => {
+// Função para retornar todos os vigias (SEM req, res)
+const retornaTodosVigias = async () => {
   try {
-    const vigias = await usuarioRepository.obterTodosVigias();
-    res.status(200).json({ vigias: vigias });
+    return await usuarioRepository.obterTodosVigias();
   } catch (error) {
     console.log("Erro ao buscar vigias:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar vigias: " + error.message);
   }
 };
 
-// Função para retornar todos os administradores
-const retornaTodosAdministradores = async (req, res) => {
+// Função para retornar todos os administradores (SEM req, res)
+const retornaTodosAdministradores = async () => {
   try {
-    const administradores = await usuarioRepository.obterTodosAdministradores();
-    res.status(200).json({ administradores: administradores });
+    return await usuarioRepository.obterTodosAdministradores();
   } catch (error) {
     console.log("Erro ao buscar administradores:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar administradores: " + error.message);
   }
 };
 
-// Função para verificar senha
-const verificaSenha = async (req, res) => {
-  const { senhaPlana, senhaHash } = req.body;
-  
+// Função para verificar senha (SEM req, res)
+const verificaSenha = async (senhaPlana, senhaHash) => {
   try {
-    const senhaValida = await bcrypt.compare(senhaPlana, senhaHash);
-    res.status(200).json({ valida: senhaValida });
+    return await bcrypt.compare(senhaPlana, senhaHash);
   } catch (error) {
     console.log("Erro ao verificar senha:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao verificar senha: " + error.message);
   }
 };
 

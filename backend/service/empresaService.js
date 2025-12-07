@@ -1,82 +1,70 @@
 const empresaRepository = require("../repositories/empresaRepositories");
 
 // Função para retornar todas as empresas
-const retornaTodasEmpresas = async (req, res) => {
+const retornaTodasEmpresas = async () => {
   try {
-    const empresas = await empresaRepository.obterTodasEmpresas();
-    res.status(200).json({ empresas: empresas });
+    return await empresaRepository.obterTodasEmpresas();
   } catch (error) {
     console.log("Erro ao buscar empresas:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar empresas: " + error.message);
   }
 };
 
 // Função para buscar empresa por ID
-const retornaEmpresaPorId = async (req, res) => {
-  const { id } = req.params;
-  const idEmpresa = parseInt(req.params.id);
-  
+const retornaEmpresaPorId = async (idEmpresa) => {
   try {
     const empresa = await empresaRepository.obterEmpresaPorId(idEmpresa);
     
     if (!empresa) {
-      res.status(404).json({ message: "Empresa não encontrada" });
-    } else {
-      res.status(200).json(empresa);
+      throw new Error("Empresa não encontrada");
     }
+    
+    return empresa;
   } catch (error) {
     console.log("Erro ao buscar empresa:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar empresa: " + error.message);
   }
 };
 
 // Função para criar uma empresa
-const criaEmpresa = async (req, res) => {
-  const empresaData = req.body;
-  
+const criaEmpresa = async (empresaData) => {
   try {
-    const empresaCriada = await empresaRepository.criaEmpresa(empresaData);
-    res.status(201).json(empresaCriada);
+    return await empresaRepository.criaEmpresa(empresaData);
   } catch (error) {
     console.log("Erro ao criar empresa:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao criar empresa: " + error.message);
   }
 };
 
 // Função para atualizar uma empresa
-const atualizaEmpresa = async (req, res) => {
-  const idEmpresa = parseInt(req.params.id);
-  const empresaData = req.body;
-  
+const atualizaEmpresa = async (idEmpresa, empresaData) => {
   try {
     const empresaAtualizada = await empresaRepository.atualizaEmpresa(idEmpresa, empresaData);
     
     if (!empresaAtualizada) {
-      res.status(404).json({ message: "Empresa não encontrada" });
-    } else {
-      res.status(200).json(empresaAtualizada);
+      throw new Error("Empresa não encontrada");
     }
+    
+    return empresaAtualizada;
   } catch (error) {
     console.log("Erro ao atualizar empresa:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao atualizar empresa: " + error.message);
   }
 };
 
 // Função para deletar uma empresa
-const deletaEmpresa = async (req, res) => {
-  const idEmpresa = parseInt(req.params.id);
-  
+const deletaEmpresa = async (idEmpresa) => {
   try {
     const empresaDeletada = await empresaRepository.deletaEmpresa(idEmpresa);
     
     if (!empresaDeletada) {
-      res.status(404).json({ message: "Empresa não encontrada" });
-    } else {
-      res.status(200).json({ message: "Empresa deletada com sucesso" });
+      throw new Error("Empresa não encontrada");
     }
+    
+    return { message: "Empresa deletada com sucesso" };
   } catch (error) {
     console.log("Erro ao deletar empresa:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao deletar empresa: " + error.message);
   }
 };
 

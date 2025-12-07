@@ -3,81 +3,75 @@ const usuarioRepository = require("../repositories/usuarioRepositories");
 const bcrypt = require("bcryptjs");
 
 // Função para retornar todos os vigias
-const retornaTodosVigias = async (req, res) => {
+const retornaTodosVigias = async () => {
   try {
-    const vigias = await vigiaRepository.obterTodosVigias();
-    res.status(200).json({ vigias: vigias });
+    return await vigiaRepository.obterTodosVigias();
   } catch (error) {
     console.log("Erro ao buscar vigias:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar vigias: " + error.message);
   }
 };
 
 // Função para retornar vigia por ID
-const retornaVigiaPorId = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+const retornaVigiaPorId = async (idUsuario) => {
   try {
     const vigia = await vigiaRepository.obterVigiaPorId(idUsuario);
     
     if (!vigia) {
-      res.status(404).json({ message: "Vigia não encontrado" });
-    } else {
-      res.status(200).json(vigia);
+      throw new Error("Vigia não encontrado");
     }
+    
+    return vigia;
   } catch (error) {
     console.log("Erro ao buscar vigia:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar vigia: " + error.message);
   }
 };
 
 // Função para retornar vigias ativos
-const retornaVigiasAtivos = async (req, res) => {
+const retornaVigiasAtivos = async () => {
   try {
-    const vigiasAtivos = await vigiaRepository.obterVigiasAtivos();
-    res.status(200).json({ vigias: vigiasAtivos });
+    return await vigiaRepository.obterVigiasAtivos();
   } catch (error) {
     console.log("Erro ao buscar vigias ativos:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar vigias ativos: " + error.message);
   }
 };
 
 // Função para retornar vigias em ronda
-const retornaVigiasEmRonda = async (req, res) => {
+const retornaVigiasEmRonda = async () => {
   try {
-    const vigiasEmRonda = await vigiaRepository.obterVigiasEmRonda();
-    res.status(200).json({ vigias: vigiasEmRonda });
+    return await vigiaRepository.obterVigiasEmRonda();
   } catch (error) {
     console.log("Erro ao buscar vigias em ronda:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar vigias em ronda: " + error.message);
   }
 };
 
 // Função para retornar vigias disponíveis (fora de ronda)
-const retornaVigiasDisponiveis = async (req, res) => {
+const retornaVigiasDisponiveis = async () => {
   try {
-    const vigiasDisponiveis = await vigiaRepository.obterVigiasForaDeRonda();
-    res.status(200).json({ vigias: vigiasDisponiveis });
+    return await vigiaRepository.obterVigiasForaDeRonda();
   } catch (error) {
     console.log("Erro ao buscar vigias disponíveis:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar vigias disponíveis: " + error.message);
   }
 };
 
 // Função para criar um novo vigia
-const criaVigia = async (req, res) => {
-  const { nome, email, senha, telefone, cpf, dataNascimento, foto } = req.body;
+const criaVigia = async (vigiaData) => {
+  const { nome, email, senha, telefone, cpf, dataNascimento, foto } = vigiaData;
   
   try {
     // Validações
     if (!nome || !email || !senha) {
-      return res.status(400).json({ message: "Nome, email e senha são obrigatórios" });
+      throw new Error("Nome, email e senha são obrigatórios");
     }
 
     // Verifica se email já existe
     const usuarioExistente = await usuarioRepository.obterUsuarioPorEmail(email);
     if (usuarioExistente) {
-      return res.status(400).json({ message: "Email já cadastrado no sistema" });
+      throw new Error("Email já cadastrado no sistema");
     }
 
     // Hash da senha
@@ -91,7 +85,7 @@ const criaVigia = async (req, res) => {
       telefone: telefone || null,
       cpf: cpf || null,
       dataNascimento: dataNascimento || null,
-      status: true,
+      status: true, // CORRIGIDO: Mantém como 'status' conforme seu model
     });
 
     // Criar perfil de vigia
@@ -102,24 +96,22 @@ const criaVigia = async (req, res) => {
     });
 
     // Retornar vigia completo
-    const vigiaCriado = await vigiaRepository.obterVigiaPorId(novoUsuario.idUsuario);
-    res.status(201).json(vigiaCriado);
+    return await vigiaRepository.obterVigiaPorId(novoUsuario.idUsuario);
   } catch (error) {
     console.log("Erro ao criar vigia:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao criar vigia: " + error.message);
   }
 };
 
 // Função para atualizar vigia
-const atualizaVigia = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  const { nome, email, telefone, cpf, dataNascimento, foto, senha, status } = req.body;
+const atualizaVigia = async (idUsuario, vigiaData) => {
+  const { nome, email, telefone, cpf, dataNascimento, foto, senha, status } = vigiaData;
   
   try {
     // Verifica se vigia existe
     const vigiaExistente = await vigiaRepository.obterVigiaPorId(idUsuario);
     if (!vigiaExistente) {
-      return res.status(404).json({ message: "Vigia não encontrado" });
+      throw new Error("Vigia não encontrado");
     }
 
     // Atualizar dados do usuário se fornecidos
@@ -129,7 +121,7 @@ const atualizaVigia = async (req, res) => {
       // Verifica se email já está em uso por outro usuário
       const usuarioComEmail = await usuarioRepository.obterUsuarioPorEmail(email);
       if (usuarioComEmail && usuarioComEmail.idUsuario !== idUsuario) {
-        return res.status(400).json({ message: "Email já está em uso por outro usuário" });
+        throw new Error("Email já está em uso por outro usuário");
       }
       dadosUsuario.email = email;
     }
@@ -154,214 +146,184 @@ const atualizaVigia = async (req, res) => {
     }
 
     // Retornar vigia atualizado
-    const vigiaAtualizado = await vigiaRepository.obterVigiaPorId(idUsuario);
-    res.status(200).json(vigiaAtualizado);
+    return await vigiaRepository.obterVigiaPorId(idUsuario);
   } catch (error) {
     console.log("Erro ao atualizar vigia:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao atualizar vigia: " + error.message);
   }
 };
 
 // Função para atualizar foto do vigia
-const atualizaFotoVigia = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  const { foto } = req.body;
-  
+const atualizaFotoVigia = async (idUsuario, foto) => {
   try {
     const vigia = await vigiaRepository.obterVigiaPorId(idUsuario);
     if (!vigia) {
-      return res.status(404).json({ message: "Vigia não encontrado" });
+      throw new Error("Vigia não encontrado");
     }
 
-    const vigiaAtualizado = await vigiaRepository.atualizaFotoVigia(idUsuario, foto);
-    res.status(200).json(vigiaAtualizado);
+    return await vigiaRepository.atualizaFotoVigia(idUsuario, foto);
   } catch (error) {
     console.log("Erro ao atualizar foto do vigia:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao atualizar foto do vigia: " + error.message);
   }
 };
 
 // Função para iniciar ronda de um vigia
-const iniciaRondaVigia = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+const iniciaRondaVigia = async (idUsuario) => {
   try {
     const vigia = await vigiaRepository.obterVigiaPorId(idUsuario);
     if (!vigia) {
-      return res.status(404).json({ message: "Vigia não encontrado" });
+      throw new Error("Vigia não encontrado");
     }
 
     if (vigia.Usuario && !vigia.Usuario.status) {
-      return res.status(400).json({ message: "Vigia inativo não pode iniciar ronda" });
+      throw new Error("Vigia inativo não pode iniciar ronda");
     }
 
     if (vigia.EstaRonda) {
-      return res.status(400).json({ message: "Vigia já está em ronda" });
+      throw new Error("Vigia já está em ronda");
     }
 
-    const vigiaAtualizado = await vigiaRepository.iniciaRondaVigia(idUsuario);
-    res.status(200).json(vigiaAtualizado);
+    return await vigiaRepository.iniciaRondaVigia(idUsuario);
   } catch (error) {
     console.log("Erro ao iniciar ronda do vigia:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao iniciar ronda do vigia: " + error.message);
   }
 };
 
 // Função para finalizar ronda de um vigia
-const finalizaRondaVigia = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+const finalizaRondaVigia = async (idUsuario) => {
   try {
     const vigia = await vigiaRepository.obterVigiaPorId(idUsuario);
     if (!vigia) {
-      return res.status(404).json({ message: "Vigia não encontrado" });
+      throw new Error("Vigia não encontrado");
     }
 
     if (!vigia.EstaRonda) {
-      return res.status(400).json({ message: "Vigia não está em ronda" });
+      throw new Error("Vigia não está em ronda");
     }
 
-    const vigiaAtualizado = await vigiaRepository.finalizaRondaVigia(idUsuario);
-    res.status(200).json(vigiaAtualizado);
+    return await vigiaRepository.finalizaRondaVigia(idUsuario);
   } catch (error) {
     console.log("Erro ao finalizar ronda do vigia:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao finalizar ronda do vigia: " + error.message);
   }
 };
 
 // Função para deletar vigia
-const deletaVigia = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+const deletaVigia = async (idUsuario) => {
   try {
     const vigia = await vigiaRepository.obterVigiaPorId(idUsuario);
     if (!vigia) {
-      return res.status(404).json({ message: "Vigia não encontrado" });
+      throw new Error("Vigia não encontrado");
     }
 
     // Verifica se vigia está em ronda
     if (vigia.EstaRonda) {
-      return res.status(400).json({ 
-        message: "Não é possível deletar vigia que está em ronda. Finalize a ronda primeiro." 
-      });
+      throw new Error("Não é possível deletar vigia que está em ronda. Finalize a ronda primeiro.");
     }
 
     // Deleta vigia (cascade vai deletar usuário)
     const deletado = await vigiaRepository.deletaVigia(idUsuario);
 
     if (!deletado) {
-      return res.status(500).json({ message: "Erro ao deletar vigia" });
+      throw new Error("Erro ao deletar vigia");
     }
 
     // Deleta usuário
     await usuarioRepository.deletaUsuario(idUsuario);
 
-    res.status(200).json({ message: "Vigia deletado com sucesso" });
+    return { message: "Vigia deletado com sucesso" };
   } catch (error) {
     console.log("Erro ao deletar vigia:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao deletar vigia: " + error.message);
   }
 };
 
 // Função para inativar vigia
-const inativaVigia = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+const inativaVigia = async (idUsuario) => {
   try {
     const vigiaExistente = await vigiaRepository.obterVigiaPorId(idUsuario);
     if (!vigiaExistente) {
-      return res.status(404).json({ message: "Vigia não encontrado" });
+      throw new Error("Vigia não encontrado");
     }
 
     await usuarioRepository.atualizaUsuario(idUsuario, { status: false });
-    const vigiaAtualizado = await vigiaRepository.obterVigiaPorId(idUsuario);
-    
-    res.status(200).json(vigiaAtualizado);
+    return await vigiaRepository.obterVigiaPorId(idUsuario);
   } catch (error) {
     console.log("Erro ao inativar vigia:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao inativar vigia: " + error.message);
   }
 };
 
 // Função para ativar vigia
-const ativaVigia = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+const ativaVigia = async (idUsuario) => {
   try {
     const vigiaExistente = await vigiaRepository.obterVigiaPorId(idUsuario);
     if (!vigiaExistente) {
-      return res.status(404).json({ message: "Vigia não encontrado" });
+      throw new Error("Vigia não encontrado");
     }
 
     await usuarioRepository.atualizaUsuario(idUsuario, { status: true });
-    const vigiaAtualizado = await vigiaRepository.obterVigiaPorId(idUsuario);
-    
-    res.status(200).json(vigiaAtualizado);
+    return await vigiaRepository.obterVigiaPorId(idUsuario);
   } catch (error) {
     console.log("Erro ao ativar vigia:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao ativar vigia: " + error.message);
   }
 };
 
 // Função para retornar rondas do vigia
-const retornaRondasDoVigia = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+const retornaRondasDoVigia = async (idUsuario) => {
   try {
     const vigia = await vigiaRepository.obterVigiaPorId(idUsuario);
     if (!vigia) {
-      return res.status(404).json({ message: "Vigia não encontrado" });
+      throw new Error("Vigia não encontrado");
     }
 
-    const rondas = await vigiaRepository.obterRondasDoVigia(idUsuario);
-    res.status(200).json({ rondas: rondas });
+    return await vigiaRepository.obterRondasDoVigia(idUsuario);
   } catch (error) {
     console.log("Erro ao buscar rondas do vigia:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar rondas do vigia: " + error.message);
   }
 };
 
 // Função para retornar estatísticas do vigia
-const retornaEstatisticasVigia = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+const retornaEstatisticasVigia = async (idUsuario) => {
   try {
     const estatisticas = await vigiaRepository.obterEstatisticasVigia(idUsuario);
     
     if (!estatisticas) {
-      res.status(404).json({ message: "Vigia não encontrado" });
-    } else {
-      res.status(200).json(estatisticas);
+      throw new Error("Vigia não encontrado");
     }
+    
+    return estatisticas;
   } catch (error) {
     console.log("Erro ao buscar estatísticas do vigia:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao buscar estatísticas do vigia: " + error.message);
   }
 };
 
 // Função para verificar disponibilidade do vigia
-const verificaDisponibilidadeVigia = async (req, res) => {
-  const idUsuario = parseInt(req.params.id);
-  
+const verificaDisponibilidadeVigia = async (idUsuario) => {
   try {
     const vigia = await vigiaRepository.obterVigiaPorId(idUsuario);
     
     if (!vigia) {
-      return res.status(200).json({ disponivel: false, motivo: "Vigia não encontrado" });
+      return { disponivel: false, motivo: "Vigia não encontrado" };
     }
 
     if (!vigia.Usuario || !vigia.Usuario.status) {
-      return res.status(200).json({ disponivel: false, motivo: "Vigia inativo" });
+      return { disponivel: false, motivo: "Vigia inativo" };
     }
 
     if (vigia.EstaRonda) {
-      return res.status(200).json({ disponivel: false, motivo: "Vigia já está em ronda" });
+      return { disponivel: false, motivo: "Vigia já está em ronda" };
     }
 
-    res.status(200).json({ disponivel: true, vigia: vigia });
+    return { disponivel: true, vigia: vigia };
   } catch (error) {
     console.log("Erro ao verificar disponibilidade do vigia:", error);
-    res.sendStatus(500);
+    throw new Error("Erro ao verificar disponibilidade do vigia: " + error.message);
   }
 };
 

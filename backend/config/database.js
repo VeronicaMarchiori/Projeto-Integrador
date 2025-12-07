@@ -5,7 +5,6 @@ const transactionNamespace = cls.createNamespace("transaction_namespace");
 
 Sequelize.useCLS(transactionNamespace);
 
-// Configuração da conexão com PostgreSQL
 const sequelize = new Sequelize({
   host: "localhost",
   port: "5432",

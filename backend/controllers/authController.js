@@ -1,5 +1,5 @@
 const express = require('express');
-const authService = require('../service/usuarioService');
+const usuarioService  = require('../service/usuarioService');
 const logAcessoService = require('../service/logAcessoService');
 const jwt = require('jsonwebtoken');
 
@@ -18,7 +18,7 @@ authRouter.post('/login', async (req, res) => {
     }
 
     // Buscar usuário por email
-    const usuario = await authService.retornaUsuarioPorEmail(email);
+    const usuario = await usuarioService.retornaUsuarioPorEmail(email);
 
     if (!usuario) {
       // Registrar tentativa falha
@@ -35,7 +35,7 @@ authRouter.post('/login', async (req, res) => {
     }
 
     // Verificar senha
-    const senhaValida = await authService.verificaSenha(password, usuario.senha);
+    const senhaValida = await usuarioService.verificaSenha(password, usuario.senha);
 
     if (!senhaValida) {
       // Registrar tentativa falha
@@ -126,7 +126,7 @@ authRouter.get('/me', async (req, res) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key_default');
 
-    const usuario = await authService.retornaUsuarioPorId(decoded.idUsuario);
+    const usuario = await usuarioService.retornaUsuarioPorId(decoded.idUsuario);
 
     if (!usuario) {
       return res.status(404).json({
