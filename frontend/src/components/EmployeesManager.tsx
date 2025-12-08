@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Users, Mail, Shield, UserCircle, Plus, Phone, CreditCard, Edit2, Trash2, Search, Filter, Lock } from 'lucide-react';
+import { Users, Mail, Phone, CreditCard, Edit2, Trash2, Search, Filter, Lock, Plus } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner@2.0.3';
 
 // ========== CONFIGURAÇÃO DO BACKEND ==========
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'http://localhost:3001';
 const API_USUARIOS = `${API_BASE_URL}/usuarios`;
 
 // Helper para pegar token de autenticação
@@ -62,8 +62,8 @@ interface EmployeesManagerProps {
 export function EmployeesManager({ onNavigateToCreate }: EmployeesManagerProps) {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
@@ -110,7 +110,7 @@ export function EmployeesManager({ onNavigateToCreate }: EmployeesManagerProps) 
   };
 
   // ========== CRIAR FUNCIONÁRIO ==========
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleCreateEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.password.length < 6) {
@@ -120,6 +120,7 @@ export function EmployeesManager({ onNavigateToCreate }: EmployeesManagerProps) 
 
     try {
       const backendData = {
+        login: formData.email, // Usando email como login
         nome: formData.name,
         email: formData.email,
         cpf: formData.cpf,
@@ -143,8 +144,8 @@ export function EmployeesManager({ onNavigateToCreate }: EmployeesManagerProps) 
       
       if (result.success && result.data) {
         const newEmployee = mapBackendToFrontend(result.data);
-        setEmployees([...employees, newEmployee]);
-        setDialogOpen(false);
+        setEmployees([newEmployee, ...employees]);
+        setShowCreateDialog(false);
         setFormData({ name: '', email: '', cpf: '', phone: '', role: 'guard', password: '' });
         toast.success('Funcionário cadastrado com sucesso!');
       }
@@ -155,7 +156,7 @@ export function EmployeesManager({ onNavigateToCreate }: EmployeesManagerProps) 
   };
 
   // ========== EDITAR FUNCIONÁRIO ==========
-  const handleEditSubmit = async (e: React.FormEvent) => {
+  const handleEditEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!editingEmployee) return;
@@ -189,7 +190,7 @@ export function EmployeesManager({ onNavigateToCreate }: EmployeesManagerProps) 
           emp.id === editingEmployee.id ? updatedEmployee : emp
         ));
         
-        setEditDialogOpen(false);
+        setShowEditDialog(false);
         setEditingEmployee(null);
         toast.success('Funcionário atualizado com sucesso!');
       }
@@ -201,7 +202,7 @@ export function EmployeesManager({ onNavigateToCreate }: EmployeesManagerProps) 
 
   const openEditDialog = (employee: Employee) => {
     setEditingEmployee({ ...employee });
-    setEditDialogOpen(true);
+    setShowEditDialog(true);
   };
 
   // ========== DELETAR FUNCIONÁRIO ==========
@@ -286,153 +287,153 @@ export function EmployeesManager({ onNavigateToCreate }: EmployeesManagerProps) 
           <h2 className="text-2xl font-bold text-gray-900">Funcionários da Ronda</h2>
           <p className="text-gray-600">Gerencie a equipe de vigilância e segurança</p>
         </div>
-        {onNavigateToCreate ? (
-          <Button 
-            className="bg-primary-600 hover:bg-primary-700"
-            onClick={onNavigateToCreate}
-          >
-            <Plus className="size-4 mr-2" />
-            Novo Funcionário
-          </Button>
-        ) : (
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary-600 hover:bg-primary-700">
-                <Plus className="size-4 mr-2" />
-                Novo Funcionário
-              </Button>
-            </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Cadastrar Funcionário</DialogTitle>
-              <DialogDescription>
-                Preencha os dados do novo funcionário do sistema de rondas
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome Completo *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Nome do funcionário"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="email@exemplo.com"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cpf">CPF *</Label>
-                  <Input
-                    id="cpf"
-                    value={formData.cpf}
-                    onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
-                    placeholder="000.000.000-00"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone</Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="(00) 00000-0000"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="role">Função *</Label>
-                <Select
-                  value={formData.role}
-                  onValueChange={(value: any) => setFormData({ ...formData, role: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="guard">
-                      <div className="flex items-center gap-2">
-                        <span>🛡️</span>
-                        <span>Vigilante</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="supervisor">
-                      <div className="flex items-center gap-2">
-                        <span>🔍</span>
-                        <span>Supervisor</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="admin">
-                      <div className="flex items-center gap-2">
-                        <span>👑</span>
-                        <span>Administrador</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Campo de Senha Temporária */}
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha Temporária *</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <Input
-                    id="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder="Digite a senha inicial do funcionário"
-                    required
-                    style={{ paddingLeft: '3rem' }}
-                  />
-                </div>
-                <p className="text-sm text-gray-500">
-                  Esta será a senha inicial. O funcionário poderá alterá-la após o primeiro login.
-                </p>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <Button type="button" variant="outline" className="flex-1" onClick={() => setDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit" className="flex-1 bg-primary-600 hover:bg-primary-700">
-                  Cadastrar
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-          </Dialog>
-        )}
+        
+        <Button 
+          className="bg-primary-600 hover:bg-primary-700"
+          onClick={() => setShowCreateDialog(true)}
+        >
+          <Plus className="size-4 mr-2" />
+          Novo Funcionário
+        </Button>
       </div>
 
+      {/* Create Employee Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Cadastrar Novo Funcionário</DialogTitle>
+            <DialogDescription>
+              Preencha os dados do novo funcionário do sistema de rondas
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleCreateEmployee} className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome Completo *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Nome do funcionário"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="email@exemplo.com"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="cpf">CPF *</Label>
+                <Input
+                  id="cpf"
+                  value={formData.cpf}
+                  onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
+                  placeholder="000.000.000-00"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Telefone</Label>
+                <Input
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="role">Função *</Label>
+              <Select
+                value={formData.role}
+                onValueChange={(value: any) => setFormData({ ...formData, role: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="guard">
+                    <div className="flex items-center gap-2">
+                      <span>🛡️</span>
+                      <span>Vigilante</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="supervisor">
+                    <div className="flex items-center gap-2">
+                      <span>🔍</span>
+                      <span>Supervisor</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="admin">
+                    <div className="flex items-center gap-2">
+                      <span>👑</span>
+                      <span>Administrador</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha Temporária *</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Digite a senha inicial do funcionário"
+                  required
+                  style={{ paddingLeft: '3rem' }}
+                />
+              </div>
+              <p className="text-sm text-gray-500">
+                Esta será a senha inicial. O funcionário poderá alterá-la após o primeiro login.
+              </p>
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowCreateDialog(false)}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" className="flex-1 bg-primary-600 hover:bg-primary-700">
+                Cadastrar Funcionário
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* Edit Employee Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar Funcionário</DialogTitle>
             <DialogDescription>
               Altere os dados do funcionário
             </DialogDescription>
           </DialogHeader>
+
           {editingEmployee && (
-            <form onSubmit={handleEditSubmit} className="space-y-4">
+            <form onSubmit={handleEditEmployee} className="space-y-4 mt-4">
               <div className="space-y-2">
                 <Label htmlFor="edit-name">Nome Completo *</Label>
                 <Input
@@ -511,13 +512,20 @@ export function EmployeesManager({ onNavigateToCreate }: EmployeesManagerProps) 
                 </Select>
               </div>
 
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800">
+                  <strong>Nota:</strong> Por questões de segurança, a senha não pode ser alterada aqui. 
+                  O funcionário deve usar a opção "Esqueci minha senha" no login.
+                </p>
+              </div>
+
               <div className="flex gap-3 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="flex-1" 
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
                   onClick={() => {
-                    setEditDialogOpen(false);
+                    setShowEditDialog(false);
                     setEditingEmployee(null);
                   }}
                 >
@@ -652,8 +660,7 @@ export function EmployeesManager({ onNavigateToCreate }: EmployeesManagerProps) 
                 </span>
               </div>
             </div>
-          ))}
-        </div>
+          ))}</div>
       )}
 
       {filteredEmployees.length === 0 && !loading && (

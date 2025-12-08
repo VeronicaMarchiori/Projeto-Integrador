@@ -13,7 +13,7 @@ const SESSION_KEY = 'vigiasystem_session';
 const TOKEN_KEY = 'vigiasystem_token';
 
 // Configuração da API
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'http://localhost:3001';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);

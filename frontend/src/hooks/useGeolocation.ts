@@ -22,7 +22,7 @@ export function useGeolocation() {
   };
 
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    // Retorna sempre 0 - função legacy mantida para compatibilidade
+    // Retorna sempre 0 - função legacy mantida para compatibilidade, vai ser implementada a questão da geolocalização no futuro.
     return 0;
   };
 
