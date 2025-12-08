@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Mail, Shield, UserCircle, Plus, Phone, CreditCard, Edit2, Trash2, Search, Filter } from 'lucide-react';
+import { Users, Mail, Shield, UserCircle, Plus, Phone, CreditCard, Edit2, Trash2, Search, Filter, Lock } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -7,6 +7,43 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner@2.0.3';
 
+// ========== CONFIGURAÇÃO DO BACKEND ==========
+const API_BASE_URL = 'http://localhost:3000';
+const API_USUARIOS = `${API_BASE_URL}/usuarios`;
+
+// Helper para pegar token de autenticação
+const getAuthHeaders = () => ({
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${localStorage.getItem('vigiasystem_token')}`,
+});
+
+// Mapear tipo do backend para role do frontend
+const mapTipoToRole = (tipo: string): 'admin' | 'supervisor' | 'guard' => {
+  if (tipo === 'administrador') return 'admin';
+  if (tipo === 'supervisor') return 'supervisor';
+  return 'guard';
+};
+
+// Mapear role do frontend para tipo do backend
+const mapRoleToTipo = (role: string): string => {
+  if (role === 'admin') return 'administrador';
+  if (role === 'supervisor') return 'supervisor';
+  return 'vigia';
+};
+
+// Mapear dados do backend para o formato do frontend
+const mapBackendToFrontend = (usuario: any): Employee => ({
+  id: usuario.idUsuario ? usuario.idUsuario.toString() : usuario.id,
+  name: usuario.nome,
+  email: usuario.email,
+  cpf: usuario.cpf,
+  phone: usuario.telefone,
+  role: mapTipoToRole(usuario.tipo || 'vigia'),
+  active: usuario.ativo !== undefined ? usuario.ativo : true,
+  createdAt: usuario.createdAt || usuario.dataCriacao || new Date().toISOString(),
+});
+
+// ========== INTERFACES ==========
 interface Employee {
   id: string;
   email: string;
@@ -37,79 +74,33 @@ export function EmployeesManager({ onNavigateToCreate }: EmployeesManagerProps) 
     cpf: '',
     phone: '',
     role: 'guard' as const,
+    password: '',
   });
 
   useEffect(() => {
     loadEmployees();
   }, []);
 
+  // ========== CARREGAR FUNCIONÁRIOS DO BACKEND ==========
   const loadEmployees = async () => {
     try {
-      // Dados mock de funcionários
-      const mockData: Employee[] = [
-        {
-          id: 'emp-1',
-          name: 'Carlos Silva',
-          email: 'carlos.silva@vigiasystem.com',
-          role: 'guard',
-          phone: '(11) 98765-4321',
-          cpf: '123.456.789-00',
-          active: true,
-          createdAt: '2024-01-15',
-        },
-        {
-          id: 'emp-2',
-          name: 'Maria Santos',
-          email: 'maria.santos@vigiasystem.com',
-          role: 'guard',
-          phone: '(11) 98765-4322',
-          cpf: '123.456.789-01',
-          active: true,
-          createdAt: '2024-01-20',
-        },
-        {
-          id: 'emp-3',
-          name: 'João Oliveira',
-          email: 'joao.oliveira@vigiasystem.com',
-          role: 'guard',
-          phone: '(11) 98765-4323',
-          cpf: '123.456.789-02',
-          active: true,
-          createdAt: '2024-02-01',
-        },
-        {
-          id: 'emp-4',
-          name: 'Ana Costa',
-          email: 'ana.costa@vigiasystem.com',
-          role: 'guard',
-          phone: '(11) 98765-4324',
-          cpf: '123.456.789-03',
-          active: false,
-          createdAt: '2024-02-10',
-        },
-        {
-          id: 'emp-5',
-          name: 'Roberto Ferreira',
-          email: 'roberto.ferreira@vigiasystem.com',
-          role: 'supervisor',
-          phone: '(11) 98765-4325',
-          cpf: '123.456.789-04',
-          active: true,
-          createdAt: '2024-02-15',
-        },
-        {
-          id: 'admin-001',
-          name: 'Administrador',
-          email: 'admin@admin.com',
-          role: 'admin',
-          phone: '(11) 99999-9999',
-          cpf: '000.000.000-00',
-          active: true,
-          createdAt: '2024-01-01',
-        },
-      ];
+      const response = await fetch(API_USUARIOS, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao carregar funcionários');
+      }
+
+      const result = await response.json();
       
-      setEmployees(mockData);
+      if (result.success && result.data) {
+        const mappedEmployees = result.data.map(mapBackendToFrontend);
+        setEmployees(mappedEmployees);
+      } else {
+        throw new Error('Formato de resposta inválido');
+      }
     } catch (error) {
       console.error('Error loading employees:', error);
       toast.error('Erro ao carregar funcionários');
@@ -118,52 +109,93 @@ export function EmployeesManager({ onNavigateToCreate }: EmployeesManagerProps) 
     }
   };
 
+  // ========== CRIAR FUNCIONÁRIO ==========
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (formData.password.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
     try {
-      const newEmployee: Employee = {
-        id: `emp-${Date.now()}`,
-        ...formData,
-        active: true,
-        createdAt: new Date().toISOString(),
+      const backendData = {
+        nome: formData.name,
+        email: formData.email,
+        cpf: formData.cpf,
+        telefone: formData.phone || '',
+        senha: formData.password,
+        tipo: mapRoleToTipo(formData.role),
       };
+
+      const response = await fetch(API_USUARIOS, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(backendData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao cadastrar funcionário');
+      }
+
+      const result = await response.json();
       
-      setEmployees([...employees, newEmployee]);
-      setDialogOpen(false);
-      setFormData({ name: '', email: '', cpf: '', phone: '', role: 'guard' });
-      toast.success('Funcionário cadastrado com sucesso!');
-    } catch (error) {
+      if (result.success && result.data) {
+        const newEmployee = mapBackendToFrontend(result.data);
+        setEmployees([...employees, newEmployee]);
+        setDialogOpen(false);
+        setFormData({ name: '', email: '', cpf: '', phone: '', role: 'guard', password: '' });
+        toast.success('Funcionário cadastrado com sucesso!');
+      }
+    } catch (error: any) {
       console.error('Error creating employee:', error);
-      toast.error('Erro ao cadastrar funcionário');
+      toast.error(error.message || 'Erro ao cadastrar funcionário');
     }
   };
 
+  // ========== EDITAR FUNCIONÁRIO ==========
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!editingEmployee) return;
 
     try {
-      setEmployees(employees.map(emp => 
-        emp.id === editingEmployee.id 
-          ? {
-              ...emp,
-              name: editingEmployee.name,
-              email: editingEmployee.email,
-              cpf: editingEmployee.cpf,
-              phone: editingEmployee.phone,
-              role: editingEmployee.role,
-            }
-          : emp
-      ));
+      const backendData = {
+        nome: editingEmployee.name,
+        email: editingEmployee.email,
+        cpf: editingEmployee.cpf,
+        telefone: editingEmployee.phone || '',
+        tipo: mapRoleToTipo(editingEmployee.role),
+      };
+
+      const response = await fetch(`${API_USUARIOS}/${editingEmployee.id}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(backendData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao atualizar funcionário');
+      }
+
+      const result = await response.json();
       
-      setEditDialogOpen(false);
-      setEditingEmployee(null);
-      toast.success('Funcionário atualizado com sucesso!');
-    } catch (error) {
+      if (result.success && result.data) {
+        const updatedEmployee = mapBackendToFrontend(result.data);
+        
+        setEmployees(employees.map(emp => 
+          emp.id === editingEmployee.id ? updatedEmployee : emp
+        ));
+        
+        setEditDialogOpen(false);
+        setEditingEmployee(null);
+        toast.success('Funcionário atualizado com sucesso!');
+      }
+    } catch (error: any) {
       console.error('Error updating employee:', error);
-      toast.error('Erro ao atualizar funcionário');
+      toast.error(error.message || 'Erro ao atualizar funcionário');
     }
   };
 
@@ -172,15 +204,30 @@ export function EmployeesManager({ onNavigateToCreate }: EmployeesManagerProps) 
     setEditDialogOpen(true);
   };
 
+  // ========== DELETAR FUNCIONÁRIO ==========
   const deleteEmployee = async (id: string) => {
     if (!confirm('Deseja realmente remover este funcionário?')) return;
     
     try {
-      setEmployees(employees.filter(e => e.id !== id));
-      toast.success('Funcionário removido com sucesso!');
-    } catch (error) {
+      const response = await fetch(`${API_USUARIOS}/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao deletar funcionário');
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setEmployees(employees.filter(e => e.id !== id));
+        toast.success('Funcionário removido com sucesso!');
+      }
+    } catch (error: any) {
       console.error('Error deleting employee:', error);
-      toast.error('Erro ao remover funcionário');
+      toast.error(error.message || 'Erro ao remover funcionário');
     }
   };
 
@@ -339,6 +386,26 @@ export function EmployeesManager({ onNavigateToCreate }: EmployeesManagerProps) 
                     </SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Campo de Senha Temporária */}
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha Temporária *</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="Digite a senha inicial do funcionário"
+                    required
+                    style={{ paddingLeft: '3rem' }}
+                  />
+                </div>
+                <p className="text-sm text-gray-500">
+                  Esta será a senha inicial. O funcionário poderá alterá-la após o primeiro login.
+                </p>
               </div>
 
               <div className="flex gap-3 pt-4">
