@@ -21,6 +21,7 @@ import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Badge } from './ui/badge';
 import { mockRoundReports, getReportStats } from '../utils/mockData';
+import { toast } from 'sonner@2.0.3';
 
 export function ReportsManager() {
   const [selectedReport, setSelectedReport] = useState<any>(null);
@@ -92,8 +93,391 @@ export function ReportsManager() {
   };
 
   const handleExportPDF = (report: any) => {
-    
-    alert(`Exportando pdf`);
+    try {
+      // Criar conteúdo HTML para impressão
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        toast.error('Bloqueador de pop-up detectado. Permita pop-ups para exportar.');
+        return;
+      }
+
+      const pontosVerificados = report.pointsChecked.filter((p: any) => p.status === 'success').length;
+      
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <title>Relatório de Ronda - ${report.routeName}</title>
+            <style>
+              @media print {
+                @page { margin: 1.5cm; }
+                body { margin: 0; }
+                .no-print { display: none; }
+              }
+              
+              * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+              }
+              
+              body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 210mm;
+                margin: 0 auto;
+                padding: 20px;
+                background: white;
+              }
+              
+              h1 {
+                text-align: center;
+                color: #1e40af;
+                margin-bottom: 30px;
+                padding-bottom: 10px;
+                border-bottom: 3px solid #1e40af;
+                font-size: 24px;
+              }
+              
+              .header-section {
+                background: #f3f4f6;
+                padding: 20px;
+                border-radius: 8px;
+                margin-bottom: 30px;
+                border: 1px solid #d1d5db;
+              }
+              
+              .info-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+                margin-bottom: 15px;
+              }
+              
+              .info-item {
+                padding: 10px;
+                background: white;
+                border-radius: 4px;
+                border: 1px solid #e5e7eb;
+              }
+              
+              .info-label {
+                font-size: 11px;
+                color: #6b7280;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 4px;
+              }
+              
+              .info-value {
+                font-size: 14px;
+                font-weight: 600;
+                color: #111827;
+              }
+              
+              .status-badge {
+                display: inline-block;
+                padding: 4px 12px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 600;
+              }
+              
+              .status-completed {
+                background: #d1fae5;
+                color: #065f46;
+              }
+              
+              .status-partial {
+                background: #fef3c7;
+                color: #92400e;
+              }
+              
+              h2 {
+                font-size: 18px;
+                color: #1f2937;
+                margin: 30px 0 15px 0;
+                padding-bottom: 8px;
+                border-bottom: 2px solid #e5e7eb;
+              }
+              
+              table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 15px 0;
+                background: white;
+                border: 1px solid #d1d5db;
+              }
+              
+              th {
+                background: #1e40af;
+                color: white;
+                padding: 12px 8px;
+                text-align: left;
+                font-size: 12px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+              }
+              
+              td {
+                padding: 10px 8px;
+                border-bottom: 1px solid #e5e7eb;
+                font-size: 12px;
+              }
+              
+              tr:last-child td {
+                border-bottom: none;
+              }
+              
+              tr:nth-child(even) {
+                background: #f9fafb;
+              }
+              
+              .status-ok {
+                color: #059669;
+                font-weight: 600;
+              }
+              
+              .status-fail {
+                color: #dc2626;
+                font-weight: 600;
+              }
+              
+              .severity-high {
+                color: #dc2626;
+                font-weight: 600;
+              }
+              
+              .severity-medium {
+                color: #f59e0b;
+                font-weight: 600;
+              }
+              
+              .severity-low {
+                color: #3b82f6;
+                font-weight: 600;
+              }
+              
+              .occurrence-section {
+                background: #fef3c7;
+                border: 1px solid #fbbf24;
+                border-radius: 8px;
+                padding: 15px;
+                margin: 15px 0;
+              }
+              
+              .occurrence-header {
+                font-size: 14px;
+                font-weight: 600;
+                color: #92400e;
+                margin-bottom: 10px;
+              }
+              
+              .notes-section {
+                background: #dbeafe;
+                border: 1px solid #60a5fa;
+                border-radius: 8px;
+                padding: 15px;
+                margin: 15px 0;
+              }
+              
+              .notes-header {
+                font-size: 14px;
+                font-weight: 600;
+                color: #1e40af;
+                margin-bottom: 10px;
+              }
+              
+              .footer {
+                margin-top: 40px;
+                padding-top: 20px;
+                border-top: 1px solid #d1d5db;
+                text-align: center;
+                font-size: 11px;
+                color: #6b7280;
+              }
+              
+              .print-button {
+                background: #1e40af;
+                color: white;
+                padding: 12px 24px;
+                border: none;
+                border-radius: 6px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                margin: 20px auto;
+                display: block;
+              }
+              
+              .print-button:hover {
+                background: #1e3a8a;
+              }
+            </style>
+          </head>
+          <body>
+            <h1>RELATÓRIO DE RONDA</h1>
+            
+            <div class="header-section">
+              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                <div>
+                  <div style="font-size: 20px; font-weight: 700; color: #111827; margin-bottom: 4px;">
+                    ${report.routeName}
+                  </div>
+                  <div style="font-size: 14px; color: #6b7280;">
+                    ${report.establishmentName}
+                  </div>
+                </div>
+                <span class="status-badge ${report.status === 'completed' ? 'status-completed' : 'status-partial'}">
+                  ${report.status === 'completed' ? '✓ Concluído' : '⚠ Concluído com Problemas'}
+                </span>
+              </div>
+              
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-label">Vigia Responsável</div>
+                  <div class="info-value">${report.guardName}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Taxa de Conclusão</div>
+                  <div class="info-value">${report.completionRate}%</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Início</div>
+                  <div class="info-value">${formatDate(report.startTime)}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Término</div>
+                  <div class="info-value">${formatDate(report.endTime)}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Duração Total</div>
+                  <div class="info-value">${formatDuration(report.duration)}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Pontos Verificados</div>
+                  <div class="info-value">${pontosVerificados}/${report.pointsChecked.length}</div>
+                </div>
+              </div>
+            </div>
+            
+            <h2>📍 PONTOS DE VERIFICAÇÃO</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 40px; text-align: center;">#</th>
+                  <th>Ponto</th>
+                  <th style="width: 100px; text-align: center;">Status</th>
+                  <th style="width: 140px;">Data/Hora</th>
+                  <th style="width: 140px;">Localização</th>
+                  <th>Observação</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${report.pointsChecked.map((point: any, index: number) => `
+                  <tr>
+                    <td style="text-align: center; font-weight: 600;">${index + 1}</td>
+                    <td>${point.pointName}</td>
+                    <td style="text-align: center;" class="${point.status === 'success' ? 'status-ok' : 'status-fail'}">
+                      ${point.status === 'success' ? '✓ OK' : '✗ Falha'}
+                    </td>
+                    <td>${formatDate(point.checkedAt)}</td>
+                    <td>
+                      ${point.latitude && point.longitude 
+                        ? `${point.latitude.toFixed(4)}, ${point.longitude.toFixed(4)}` 
+                        : 'N/A'}
+                    </td>
+                    <td>${point.note || '-'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            
+            ${report.occurrences.length > 0 ? `
+              <h2>⚠ OCORRÊNCIAS REGISTRADAS</h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width: 40px; text-align: center;">#</th>
+                    <th>Tipo</th>
+                    <th>Local</th>
+                    <th style="width: 90px; text-align: center;">Severidade</th>
+                    <th style="width: 90px; text-align: center;">Status</th>
+                    <th>Descrição</th>
+                    <th style="width: 140px;">Data/Hora</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${report.occurrences.map((occurrence: any, index: number) => `
+                    <tr>
+                      <td style="text-align: center; font-weight: 600;">${index + 1}</td>
+                      <td>${occurrence.type}</td>
+                      <td>${occurrence.location}</td>
+                      <td style="text-align: center;" class="severity-${occurrence.severity}">
+                        ${occurrence.severity === 'high' ? 'Alta' : occurrence.severity === 'medium' ? 'Média' : 'Baixa'}
+                      </td>
+                      <td style="text-align: center; ${occurrence.resolved ? 'color: #059669;' : 'color: #dc2626;'} font-weight: 600;">
+                        ${occurrence.resolved ? '✓ Resolvida' : '⚠ Pendente'}
+                      </td>
+                      <td>${occurrence.description}</td>
+                      <td>${formatDate(occurrence.timestamp)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            ` : ''}
+            
+            ${report.notes ? `
+              <div class="notes-section">
+                <div class="notes-header">📝 OBSERVAÇÕES DO VIGIA</div>
+                <p>${report.notes}</p>
+              </div>
+            ` : ''}
+            
+            <div class="footer">
+              <strong>VigiaSystem</strong> - Sistema de Gestão de Rondas<br>
+              Relatório gerado em ${new Date().toLocaleString('pt-BR')}<br>
+              ID do Relatório: ${report.id}
+            </div>
+            
+            <button class="print-button no-print" onclick="window.print()">
+              🖨️ Imprimir / Salvar como PDF
+            </button>
+          </body>
+        </html>
+      `;
+
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      
+      toast.success('Abrindo relatório para impressão...');
+    } catch (error) {
+      console.error('Erro ao exportar PDF:', error);
+      toast.error('Erro ao exportar relatório');
+    }
+  };
+
+  const handleExportAllPDFs = () => {
+    try {
+      toast.info(`Exportando ${mockRoundReports.length} relatórios...`);
+      
+      // Exportar cada relatório separadamente
+      mockRoundReports.forEach((report, index) => {
+        setTimeout(() => {
+          handleExportPDF(report);
+        }, index * 500); // Delay de 500ms entre cada exportação para não travar o navegador
+      });
+      
+      setTimeout(() => {
+        toast.success(`${mockRoundReports.length} relatórios exportados com sucesso!`);
+      }, mockRoundReports.length * 500 + 1000);
+    } catch (error) {
+      console.error('Erro ao exportar relatórios:', error);
+      toast.error('Erro ao exportar relatórios');
+    }
   };
 
   return (
@@ -106,7 +490,10 @@ export function ReportsManager() {
             Visualize e analise os relatórios detalhados das rondas executadas
           </p>
         </div>
-        <Button className="bg-primary-600 hover:bg-primary-700 text-white">
+        <Button 
+          className="bg-primary-600 hover:bg-primary-700 text-white"
+          onClick={handleExportAllPDFs}
+        >
           <Download className="size-4 mr-2" />
           Exportar Relatórios
         </Button>
