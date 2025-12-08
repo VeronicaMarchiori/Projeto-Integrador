@@ -1,18 +1,18 @@
 import { useState } from 'react';
-import { 
-  Users, 
-  FileText,
-  LogOut,
+import {
   Menu,
   X,
+  Users,
+  FileText,
   Shield,
+  LogOut,
   Clock,
-  UserPlus,
   Building2,
   Route,
 } from 'lucide-react';
 import { useAuth, User } from '../hooks/useAuth';
 import { EmployeesManager } from './EmployeesManager';
+import { EmployeesManagerDebug } from './EmployeesManagerDebug';
 import { ReportsManager } from './ReportsManager';
 import { CreateGuardForm } from './CreateGuardForm';
 import { ClientsManager } from './ClientsManager';
