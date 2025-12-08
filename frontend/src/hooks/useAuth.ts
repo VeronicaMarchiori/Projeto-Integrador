@@ -12,7 +12,6 @@ export interface User {
 const SESSION_KEY = 'vigiasystem_session';
 const TOKEN_KEY = 'vigiasystem_token';
 
-// Configuração da API
 const API_BASE_URL = 'http://localhost:3001';
 
 export function useAuth() {
@@ -27,7 +26,7 @@ export function useAuth() {
     try {
       const savedSession = localStorage.getItem(SESSION_KEY);
       const savedToken = localStorage.getItem(TOKEN_KEY);
-      
+
       if (savedSession && savedToken) {
         const sessionUser = JSON.parse(savedSession);
         setUser(sessionUser);
@@ -41,7 +40,6 @@ export function useAuth() {
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      // ========== CHAMAR BACKEND DE LOGIN ==========
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
@@ -50,18 +48,15 @@ export function useAuth() {
         body: JSON.stringify({ email, password }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        return { error: errorData.message || 'Email ou senha incorretos' };
-      }
-
       const result = await response.json();
 
-      // Backend retorna: { success: true, data: { token, usuario: {...} } }
-      if (result.success && result.data && result.data.token) {
+      if (!response.ok) {
+        return { error: result.message || 'Email ou senha incorretos' };
+      }
+
+      if (result.success && result.data?.token) {
         const { token, usuario } = result.data;
 
-        // Mapear dados do backend para o formato do frontend
         const userData: User = {
           id: usuario.idUsuario.toString(),
           name: usuario.nome,
@@ -71,12 +66,14 @@ export function useAuth() {
           avatar: usuario.foto || undefined,
         };
 
-        // ========== SALVAR TOKEN E USUÁRIO ==========
+        // Salvar no localStorage
         localStorage.setItem(TOKEN_KEY, token);
         localStorage.setItem(SESSION_KEY, JSON.stringify(userData));
+
         setUser(userData);
 
-        return { error: null };
+        // 👇 AGORA RETORNA O userType NECESSÁRIO NO AuthPage
+        return { error: null, userType: userData.role };
       }
 
       return { error: 'Resposta inválida do servidor' };
