@@ -71,16 +71,20 @@ const criaVigia = async (vigiaData) => {
 };
 
 // Função para atualizar um usuário
-const atualizaUsuario = async (usuarioData) => {
+const atualizaUsuario = async (idUsuario, usuarioData) => {
   try {
-    await model.Usuario.update(usuarioData, {
-      where: { idUsuario: usuarioData.idUsuario },
+    const [rowsUpdated] = await model.Usuario.update(usuarioData, {
+      where: { idUsuario: idUsuario },
     });
-    return await obterUsuarioPorId(usuarioData.idUsuario);
+
+    if (rowsUpdated === 0) return null; // Nenhum usuário encontrado
+
+    return await obterUsuarioPorId(idUsuario);
   } catch (error) {
     throw error;
   }
 };
+
 
 // Função para atualizar um administrador
 const atualizaAdministrador = async (adminData) => {
@@ -108,12 +112,18 @@ const atualizaVigia = async (vigiaData) => {
 
 // Função para deletar um usuário
 const deletaUsuario = async (idUsuario) => {
+  // Verifica se existe
   const usuario = await obterUsuarioPorId(idUsuario);
-  await model.Usuario.destroy({
+  if (!usuario) return null;
+
+  // Deleta
+  const deleted = await model.Usuario.destroy({
     where: { idUsuario: idUsuario },
   });
-  return usuario;
+
+  return deleted > 0 ? usuario : null;
 };
+
 
 // Função para obter todos os vigias
 const obterTodosVigias = async () => {
