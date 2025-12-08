@@ -26,6 +26,8 @@ export function EmployeesManager({ onNavigateToCreate }: EmployeesManagerProps) 
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
 
@@ -135,6 +137,39 @@ export function EmployeesManager({ onNavigateToCreate }: EmployeesManagerProps) 
       console.error('Error creating employee:', error);
       toast.error('Erro ao cadastrar funcionário');
     }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingEmployee) return;
+
+    try {
+      setEmployees(employees.map(emp => 
+        emp.id === editingEmployee.id 
+          ? {
+              ...emp,
+              name: editingEmployee.name,
+              email: editingEmployee.email,
+              cpf: editingEmployee.cpf,
+              phone: editingEmployee.phone,
+              role: editingEmployee.role,
+            }
+          : emp
+      ));
+      
+      setEditDialogOpen(false);
+      setEditingEmployee(null);
+      toast.success('Funcionário atualizado com sucesso!');
+    } catch (error) {
+      console.error('Error updating employee:', error);
+      toast.error('Erro ao atualizar funcionário');
+    }
+  };
+
+  const openEditDialog = (employee: Employee) => {
+    setEditingEmployee({ ...employee });
+    setEditDialogOpen(true);
   };
 
   const deleteEmployee = async (id: string) => {
@@ -320,6 +355,116 @@ export function EmployeesManager({ onNavigateToCreate }: EmployeesManagerProps) 
         )}
       </div>
 
+      {/* Edit Employee Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Funcionário</DialogTitle>
+            <DialogDescription>
+              Altere os dados do funcionário
+            </DialogDescription>
+          </DialogHeader>
+          {editingEmployee && (
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Nome Completo *</Label>
+                <Input
+                  id="edit-name"
+                  value={editingEmployee.name}
+                  onChange={(e) => setEditingEmployee({ ...editingEmployee, name: e.target.value })}
+                  placeholder="Nome do funcionário"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">Email *</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={editingEmployee.email}
+                  onChange={(e) => setEditingEmployee({ ...editingEmployee, email: e.target.value })}
+                  placeholder="email@exemplo.com"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-cpf">CPF *</Label>
+                  <Input
+                    id="edit-cpf"
+                    value={editingEmployee.cpf}
+                    onChange={(e) => setEditingEmployee({ ...editingEmployee, cpf: e.target.value })}
+                    placeholder="000.000.000-00"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-phone">Telefone</Label>
+                  <Input
+                    id="edit-phone"
+                    value={editingEmployee.phone || ''}
+                    onChange={(e) => setEditingEmployee({ ...editingEmployee, phone: e.target.value })}
+                    placeholder="(00) 00000-0000"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-role">Função *</Label>
+                <Select
+                  value={editingEmployee.role}
+                  onValueChange={(value: any) => setEditingEmployee({ ...editingEmployee, role: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="guard">
+                      <div className="flex items-center gap-2">
+                        <span>🛡️</span>
+                        <span>Vigilante</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="supervisor">
+                      <div className="flex items-center gap-2">
+                        <span>🔍</span>
+                        <span>Supervisor</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="admin">
+                      <div className="flex items-center gap-2">
+                        <span>👑</span>
+                        <span>Administrador</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="flex-1" 
+                  onClick={() => {
+                    setEditDialogOpen(false);
+                    setEditingEmployee(null);
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" className="flex-1 bg-primary-600 hover:bg-primary-700">
+                  Salvar Alterações
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-5">
         <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -352,7 +497,7 @@ export function EmployeesManager({ onNavigateToCreate }: EmployeesManagerProps) 
             placeholder="Buscar por nome, email ou CPF..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            style={{ paddingLeft: '3rem' }}
           />
         </div>
         <Select value={filterRole} onValueChange={setFilterRole}>
@@ -399,7 +544,10 @@ export function EmployeesManager({ onNavigateToCreate }: EmployeesManagerProps) 
                   </div>
                 </div>
                 <div className="flex gap-1">
-                  <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
+                  <button 
+                    className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                    onClick={() => openEditDialog(employee)}
+                  >
                     <Edit2 className="size-3.5 text-gray-600" />
                   </button>
                   <button

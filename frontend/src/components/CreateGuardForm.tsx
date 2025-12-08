@@ -21,8 +21,7 @@ export function CreateGuardForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulação - apenas cosmético
-    toast.success('✅ Vigilante cadastrado com sucesso!', {
+    toast.success('Vigilante cadastrado com sucesso!', {
       description: 'O novo vigilante já pode acessar o sistema.',
     });
     
@@ -73,7 +72,7 @@ export function CreateGuardForm() {
                       placeholder="João Silva"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="pl-10"
+                      style={{ paddingLeft: '3rem' }}
                       required
                     />
                   </div>
@@ -89,7 +88,7 @@ export function CreateGuardForm() {
                       placeholder="000.000.000-00"
                       value={formData.cpf}
                       onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
-                      className="pl-10"
+                      style={{ paddingLeft: '3rem' }}
                       required
                     />
                   </div>
@@ -104,7 +103,7 @@ export function CreateGuardForm() {
                       type="date"
                       value={formData.birthDate}
                       onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
-                      className="pl-10"
+                      style={{ paddingLeft: '3rem' }}
                       required
                     />
                   </div>
@@ -120,7 +119,7 @@ export function CreateGuardForm() {
                       placeholder="(00) 00000-0000"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="pl-10"
+                      style={{ paddingLeft: '3rem' }}
                       required
                     />
                   </div>
@@ -136,7 +135,7 @@ export function CreateGuardForm() {
                       placeholder="Rua, número, bairro, cidade - UF"
                       value={formData.address}
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      className="pl-10"
+                      style={{ paddingLeft: '3rem' }}
                       required
                     />
                   </div>
@@ -161,7 +160,7 @@ export function CreateGuardForm() {
                       placeholder="vigilante@email.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="pl-10"
+                      style={{ paddingLeft: '3rem' }}
                       required
                     />
                   </div>
@@ -177,7 +176,7 @@ export function CreateGuardForm() {
                       placeholder="Mínimo 6 caracteres"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="pl-10"
+                      style={{ paddingLeft: '3rem' }}
                       required
                       minLength={6}
                     />
@@ -206,7 +205,7 @@ export function CreateGuardForm() {
                       placeholder="Nome completo"
                       value={formData.emergencyContact}
                       onChange={(e) => setFormData({ ...formData, emergencyContact: e.target.value })}
-                      className="pl-10"
+                      style={{ paddingLeft: '3rem' }}
                       required
                     />
                   </div>
@@ -222,7 +221,7 @@ export function CreateGuardForm() {
                       placeholder="(00) 00000-0000"
                       value={formData.emergencyPhone}
                       onChange={(e) => setFormData({ ...formData, emergencyPhone: e.target.value })}
-                      className="pl-10"
+                      style={{ paddingLeft: '3rem' }}
                       required
                     />
                   </div>

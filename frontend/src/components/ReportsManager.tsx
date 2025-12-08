@@ -91,6 +91,11 @@ export function ReportsManager() {
     setViewDialogOpen(true);
   };
 
+  const handleExportPDF = (report: any) => {
+    
+    alert(`Exportando pdf`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -424,7 +429,13 @@ export function ReportsManager() {
                 <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
                   Fechar
                 </Button>
-                <Button className="bg-primary-600 hover:bg-primary-700 text-white">
+                <Button 
+                  className="bg-primary-600 hover:bg-primary-700 text-white"
+                  onClick={() => {
+                    handleExportPDF(selectedReport);
+                    setViewDialogOpen(false);
+                  }}
+                >
                   <Download className="size-4 mr-2" />
                   Exportar PDF
                 </Button>

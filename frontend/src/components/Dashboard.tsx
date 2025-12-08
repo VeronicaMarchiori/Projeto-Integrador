@@ -32,7 +32,6 @@ export function Dashboard({ mockUser }: DashboardProps) {
 
   const menuItems = [
     { id: 'employees' as MenuOption, label: 'Gerenciar Funcionários', icon: Users },
-    { id: 'create-guard' as MenuOption, label: 'Criar Novo Funcionário', icon: UserPlus },
     { id: 'clients' as MenuOption, label: 'Gerenciar Clientes', icon: Building2 },
     { id: 'routes' as MenuOption, label: 'Gerenciar Rotas', icon: Route },
     { id: 'reports' as MenuOption, label: 'Relatórios das Rondas', icon: FileText },

@@ -22,7 +22,6 @@ export function AuthPage() {
     setLoading(true);
 
     try {
-      // Remove espaços em branco extras
       const email = formData.email.trim();
       const password = formData.password.trim();
       
@@ -111,7 +110,7 @@ export function AuthPage() {
                   placeholder="seu@email.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="pl-10"
+                  className="pl-16"
                   required
                 />
               </div>
@@ -127,7 +126,7 @@ export function AuthPage() {
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="pl-10"
+                  style={{ paddingLeft: '3rem' }}
                   required
                 />
               </div>

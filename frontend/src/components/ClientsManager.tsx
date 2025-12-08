@@ -54,6 +54,8 @@ export function ClientsManager() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [newClient, setNewClient] = useState({
     name: '',
     cnpj: '',
@@ -84,6 +86,35 @@ export function ClientsManager() {
       contactPerson: '',
     });
     alert('Cliente cadastrado com sucesso! (Modo demonstração)');
+  };
+
+  const handleEditClient = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingClient) return;
+
+    setClients(clients.map(client => 
+      client.id === editingClient.id 
+        ? { 
+            ...client, 
+            name: editingClient.name,
+            cnpj: editingClient.cnpj,
+            address: editingClient.address,
+            phone: editingClient.phone,
+            email: editingClient.email,
+            contactPerson: editingClient.contactPerson,
+          }
+        : client
+    ));
+    
+    setShowEditDialog(false);
+    setEditingClient(null);
+    alert('Cliente atualizado com sucesso! (Modo demonstração)');
+  };
+
+  const openEditDialog = (client: Client) => {
+    setEditingClient({ ...client });
+    setShowEditDialog(true);
   };
 
   const filteredClients = clients.filter(client =>
@@ -209,6 +240,108 @@ export function ClientsManager() {
         </Dialog>
       </div>
 
+      {/* Edit Client Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Cliente</DialogTitle>
+            <DialogDescription>
+              Altere as informações do cliente
+            </DialogDescription>
+          </DialogHeader>
+
+          {editingClient && (
+            <form onSubmit={handleEditClient} className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Nome da Empresa *</Label>
+                <Input
+                  id="edit-name"
+                  value={editingClient.name}
+                  onChange={(e) => setEditingClient({ ...editingClient, name: e.target.value })}
+                  placeholder="Ex: Shopping Center Norte"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-cnpj">CNPJ *</Label>
+                <Input
+                  id="edit-cnpj"
+                  value={editingClient.cnpj}
+                  onChange={(e) => setEditingClient({ ...editingClient, cnpj: e.target.value })}
+                  placeholder="00.000.000/0000-00"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-address">Endereço *</Label>
+                <Textarea
+                  id="edit-address"
+                  value={editingClient.address}
+                  onChange={(e) => setEditingClient({ ...editingClient, address: e.target.value })}
+                  placeholder="Rua, número, bairro, cidade"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-phone">Telefone *</Label>
+                  <Input
+                    id="edit-phone"
+                    value={editingClient.phone}
+                    onChange={(e) => setEditingClient({ ...editingClient, phone: e.target.value })}
+                    placeholder="(00) 0000-0000"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-email">E-mail *</Label>
+                  <Input
+                    id="edit-email"
+                    type="email"
+                    value={editingClient.email}
+                    onChange={(e) => setEditingClient({ ...editingClient, email: e.target.value })}
+                    placeholder="contato@empresa.com.br"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-contactPerson">Pessoa de Contato *</Label>
+                <Input
+                  id="edit-contactPerson"
+                  value={editingClient.contactPerson}
+                  onChange={(e) => setEditingClient({ ...editingClient, contactPerson: e.target.value })}
+                  placeholder="Nome do responsável"
+                  required
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setShowEditDialog(false);
+                    setEditingClient(null);
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" className="flex-1 bg-primary-600 hover:bg-primary-700">
+                  Salvar Alterações
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
@@ -216,7 +349,7 @@ export function ClientsManager() {
           placeholder="Buscar por nome, CNPJ ou responsável..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
+          style={{ paddingLeft: '3rem' }}
         />
       </div>
 
@@ -235,7 +368,12 @@ export function ClientsManager() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button size="sm" variant="ghost" className="size-8 p-0">
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="size-8 p-0"
+                  onClick={() => openEditDialog(client)}
+                >
                   <Edit className="size-4" />
                 </Button>
                 <Button size="sm" variant="ghost" className="size-8 p-0 text-red-600 hover:text-red-700">
