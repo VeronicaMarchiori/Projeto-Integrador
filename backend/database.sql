@@ -23,7 +23,7 @@ CREATE TABLE Usuario (
   telefone VARCHAR(20),
   email VARCHAR(100) UNIQUE NOT NULL,
   senha VARCHAR(255) NOT NULL,
-  status BOOLEAN DEFAULT true,
+  ativo BOOLEAN DEFAULT true,
   dataNascimento DATE,
   dataCriacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -164,7 +164,7 @@ CREATE INDEX IF NOT EXISTS idx_logacesso_usuario ON LogAcesso(fk_Usuario_idUsuar
 
 -- Usuário Administrador Master
 -- Login: admin@admin.com | Senha: admin
-INSERT INTO Usuario (nome, email, senha, cpf, telefone, status, dataNascimento) 
+INSERT INTO Usuario (nome, email, senha, cpf, telefone, ativo, dataNascimento) 
 VALUES (
   'Administrador Master',
   'admin@admin.com',
@@ -184,7 +184,7 @@ ON CONFLICT (idUsuario) DO NOTHING;
 
 -- Usuário Vigilante
 -- Login: vigilante@vigilante.com | Senha: vigilante
-INSERT INTO Usuario (nome, email, senha, cpf, telefone, status, dataNascimento)
+INSERT INTO Usuario (nome, email, senha, cpf, telefone, ativo, dataNascimento)
 VALUES (
   'Vigilante Exemplo',
   'vigilante@vigilante.com',

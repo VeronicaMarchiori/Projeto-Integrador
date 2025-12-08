@@ -87,7 +87,7 @@ const criaAdministrador = async (adminData) => {
       telefone: telefone || null,
       cpf: cpf || null,
       dataNascimento: dataNascimento || null,
-      status: true, // CORRIGIDO: Mantém como 'status' conforme seu model
+      ativo: true, 
     });
 
     // Criar perfil de administrador

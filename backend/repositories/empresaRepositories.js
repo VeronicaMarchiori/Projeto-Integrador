@@ -19,16 +19,20 @@ const criaEmpresa = async (empresaData) => {
 };
 
 // Função para atualizar uma empresa
-const atualizaEmpresa = async (empresaData) => {
+const atualizaEmpresa = async (idEmpresa, empresaData) => {
   try {
-    await model.Empresa.update(empresaData, {
-      where: { idEmpresa: empresaData.idEmpresa },
+    const [rowsUpdated] = await model.Empresa.update(empresaData, {
+      where: { idEmpresa: idEmpresa }  
     });
-    return await obterEmpresaPorId(empresaData.idEmpresa);
+
+    if (rowsUpdated === 0) return null;
+
+    return await model.Empresa.findByPk(idEmpresa);
   } catch (error) {
     throw error;
   }
 };
+
 
 // Função para deletar uma empresa
 const deletaEmpresa = async (idEmpresa) => {
