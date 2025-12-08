@@ -62,6 +62,10 @@ interface Ronda {
   vigias?: number[]; // IDs dos vigias
   pontos?: PontoRonda[];
   createdAt?: string;
+  // Dados relacionados que vêm do backend
+  Empresa?: { nomeEmpresa?: string; nome?: string; nomeFantasia?: string };
+  PontosRonda?: any[];
+  RondaVigias?: any[];
 }
 
 interface Cliente {
@@ -83,7 +87,7 @@ const API_BASE_URL = 'http://localhost:3001';
 const API_RONDAS = `${API_BASE_URL}/rondas`;
 const API_PONTOS_RONDA = `${API_BASE_URL}/pontos-ronda`;
 const API_PERCURSOS = `${API_BASE_URL}/percursos`;
-const API_EMPRESAS = `${API_BASE_URL}/empresas`; // Corrigido de /clientes para /empresas
+const API_EMPRESAS = `${API_BASE_URL}/empresas`; 
 const API_VIGIAS = `${API_BASE_URL}/vigias`;
 
 const getAuthHeaders = () => ({
@@ -100,6 +104,7 @@ export function RoutesManager() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedRonda, setSelectedRonda] = useState<Ronda | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTipo, setFilterTipo] = useState<string>('all');
 
@@ -128,12 +133,25 @@ export function RoutesManager() {
     try {
       const [rondasRes, clientesRes, vigiasRes] = await Promise.all([
         fetch(API_RONDAS, { headers: getAuthHeaders() }),
-        fetch(API_EMPRESAS, { headers: getAuthHeaders() }), // Corrigido de API_CLIENTES para API_EMPRESAS
+        fetch(API_EMPRESAS, { headers: getAuthHeaders() }), 
         fetch(API_VIGIAS, { headers: getAuthHeaders() }),
       ]);
 
       if (rondasRes.ok) {
         const rondasData = await rondasRes.json();
+        console.log('📥 Rondas carregadas:', rondasData.data);
+        
+        // Log detalhado de cada ronda
+        if (rondasData.data && rondasData.data.length > 0) {
+          console.log('🔍 Primeira ronda completa:', rondasData.data[0]);
+          console.log('📊 Tipos de rondas:', rondasData.data.map((r: any) => ({ 
+            nome: r.nome, 
+            tipo: r.tipo,
+            pontos: r.pontos?.length || r.PontosRonda?.length || 0,
+            vigias: r.vigias?.length || r.RondaVigias?.length || 0
+          })));
+        }
+        
         setRondas(rondasData.data || []);
       }
 
@@ -142,12 +160,11 @@ export function RoutesManager() {
         console.log('🏢 Dados brutos das empresas:', clientesData.data);
         
         const clientesComRondas = (clientesData.data || []).map((empresa: any) => {
-          console.log('Mapeando empresa:', empresa);
           return {
             idCliente: empresa.idEmpresa,
             nomeEmpresa: empresa.nomeEmpresa || empresa.nome || empresa.nomeFantasia,
             cnpj: empresa.cnpj,
-            totalRondas: rondas.filter((r) => r.idCliente === empresa.idEmpresa).length,
+            totalRondas: 0, // Será calculado depois
           };
         });
         
@@ -157,12 +174,14 @@ export function RoutesManager() {
 
       if (vigiasRes.ok) {
         const vigiasData = await vigiasRes.json();
+        console.log('👮 Vigias carregados:', vigiasData.data);
         const mappedVigias = (vigiasData.data || []).map((vigia: any) => ({
           idUsuario: vigia.idUsuario,
           nome: vigia.Usuario?.nome || vigia.nome,
           email: vigia.Usuario?.email || vigia.email,
           ativo: vigia.Usuario?.ativo !== undefined ? vigia.Usuario.ativo : true,
         }));
+        console.log('✅ Vigias mapeados:', mappedVigias);
         setVigias(mappedVigias);
       }
     } catch (error) {
@@ -170,6 +189,33 @@ export function RoutesManager() {
       toast.error('Erro ao carregar dados');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ========== CARREGAR DETALHES COMPLETOS DA RONDA ==========
+  const loadRondaDetails = async (idRonda: number) => {
+    setLoadingDetails(true);
+    try {
+      const response = await fetch(`${API_RONDAS}/${idRonda}`, {
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao carregar detalhes da ronda');
+      }
+
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        console.log('📥 Detalhes completos da ronda:', result.data);
+        setSelectedRonda(result.data);
+        setViewDialogOpen(true);
+      }
+    } catch (error) {
+      console.error('Error loading ronda details:', error);
+      toast.error('Erro ao carregar detalhes da ronda');
+    } finally {
+      setLoadingDetails(false);
     }
   };
 
@@ -276,7 +322,7 @@ export function RoutesManager() {
 
   // ========== DELETAR RONDA ==========
   const deleteRonda = async (idRonda: number) => {
-    if (!confirm('⚠️ ATENÇÃO: Deseja realmente DELETAR permanentemente esta ronda?\n\nEsta ação NÃO PODE ser desfeita!')) {
+    if (!confirm('ATENÇÃO: Deseja realmente DELETAR permanentemente esta ronda?\n\nEsta ação NÃO PODE ser desfeita!')) {
       return;
     }
 
@@ -334,6 +380,39 @@ export function RoutesManager() {
     return cliente?.nomeEmpresa || 'Cliente não encontrado';
   };
 
+  // ========== OBTER DADOS DA RONDA (com fallback para dados relacionados) ==========
+  const getRondaPontos = (ronda: Ronda) => {
+    // Tentar pegar dos relacionamentos primeiro
+    if (ronda.PontosRonda && ronda.PontosRonda.length > 0) {
+      return ronda.PontosRonda;
+    }
+    // Fallback para o array direto
+    return ronda.pontos || [];
+  };
+
+  const getRondaVigias = (ronda: Ronda) => {
+    // Tentar pegar dos relacionamentos primeiro
+    if (ronda.RondaVigias && ronda.RondaVigias.length > 0) {
+      return ronda.RondaVigias.map((rv: any) => rv.idVigia || rv.Vigia?.idUsuario).filter(Boolean);
+    }
+    // Fallback para o array direto
+    return ronda.vigias || [];
+  };
+
+  const getRondaEmpresa = (ronda: Ronda) => {
+    // Tentar pegar do relacionamento primeiro
+    if (ronda.Empresa) {
+      return ronda.Empresa.nomeEmpresa || ronda.Empresa.nome || ronda.Empresa.nomeFantasia || getClienteNome(ronda.idCliente);
+    }
+    // Fallback para buscar na lista de clientes
+    return getClienteNome(ronda.idCliente);
+  };
+
+  const getVigiaNome = (idVigia: number) => {
+    const vigia = vigias.find((v) => v.idUsuario === idVigia);
+    return vigia?.nome || `Vigia #${idVigia}`;
+  };
+
   const daysOfWeekOptions = [
     { value: '0', label: 'Dom' },
     { value: '1', label: 'Seg' },
@@ -357,7 +436,7 @@ export function RoutesManager() {
   const filteredRondas = rondas.filter((ronda) => {
     const matchesSearch =
       ronda.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      getClienteNome(ronda.idCliente).toLowerCase().includes(searchTerm.toLowerCase());
+      getRondaEmpresa(ronda).toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTipo = filterTipo === 'all' || ronda.tipo === filterTipo;
     return matchesSearch && matchesTipo;
   });
@@ -461,65 +540,93 @@ export function RoutesManager() {
 
       {/* Rondas List */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredRondas.map((ronda) => (
-          <div
-            key={ronda.idRonda}
-            className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 mb-2">{ronda.nome}</h3>
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${getTipoColor(ronda.tipo)}`}
-                >
-                  {getTipoLabel(ronda.tipo)}
-                </span>
-              </div>
-              <div className="flex gap-1">
-                <button
-                  className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                  onClick={() => {
-                    setSelectedRonda(ronda);
-                    setViewDialogOpen(true);
-                  }}
-                >
-                  <Eye className="size-3.5 text-gray-600" />
-                </button>
-                <button
-                  onClick={() => deleteRonda(ronda.idRonda!)}
-                  className="p-1.5 hover:bg-red-50 rounded transition-colors"
-                >
-                  <Trash2 className="size-3.5 text-red-600" />
-                </button>
-              </div>
-            </div>
+        {filteredRondas.map((ronda) => {
+          const pontos = getRondaPontos(ronda);
+          const vigiasIds = getRondaVigias(ronda);
+          const empresaNome = getRondaEmpresa(ronda);
 
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center gap-2 text-gray-600">
-                <Building2 className="size-4" />
-                <span className="truncate">{getClienteNome(ronda.idCliente)}</span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-600">
-                <MapPin className="size-4" />
-                <span>{ronda.pontos?.length || 0} pontos</span>
-              </div>
-              {ronda.vigias && ronda.vigias.length > 0 && (
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Users className="size-4" />
-                  <span>{ronda.vigias.length} vigilante(s)</span>
-                </div>
-              )}
-              {ronda.horarioInicio && ronda.horarioFim && (
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Clock className="size-4" />
-                  <span>
-                    {ronda.horarioInicio} - {ronda.horarioFim}
+          return (
+            <div
+              key={ronda.idRonda}
+              className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 mb-2">{ronda.nome}</h3>
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${getTipoColor(ronda.tipo)}`}
+                  >
+                    {getTipoLabel(ronda.tipo)}
                   </span>
                 </div>
-              )}
+                <div className="flex gap-1">
+                  <button
+                    className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                    onClick={() => loadRondaDetails(ronda.idRonda!)}
+                    disabled={loadingDetails}
+                  >
+                    <Eye className="size-3.5 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={() => deleteRonda(ronda.idRonda!)}
+                    className="p-1.5 hover:bg-red-50 rounded transition-colors"
+                  >
+                    <Trash2 className="size-3.5 text-red-600" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Building2 className="size-4 flex-shrink-0" />
+                  <span className="truncate">{empresaNome}</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <MapPin className="size-4 flex-shrink-0" />
+                  <span>{pontos.length || 0} ponto(s)</span>
+                </div>
+                {vigiasIds.length > 0 && (
+                  <>
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Users className="size-4 flex-shrink-0" />
+                      <span>{vigiasIds.length} vigilante(s)</span>
+                    </div>
+                    <div className="mt-3 flex items-center gap-1.5 flex-wrap">
+                      {vigiasIds.slice(0, 3).map((idVigia: number) => {
+                        const vigia = vigias.find((v) => v.idUsuario === idVigia);
+                        return (
+                          <div
+                            key={idVigia}
+                            className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100 text-green-700 text-xs font-medium border border-green-200"
+                            title={vigia?.nome || `Vigia #${idVigia}`}
+                          >
+                            {vigia ? vigia.nome.charAt(0).toUpperCase() : 'V'}
+                          </div>
+                        );
+                      })}
+                      {vigiasIds.length > 3 && (
+                        <div
+                          className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-gray-600 text-xs font-medium border border-gray-200"
+                          title={`+${vigiasIds.length - 3} vigilante(s)`}
+                        >
+                          +{vigiasIds.length - 3}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+                {ronda.horarioInicio && ronda.horarioFim && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Clock className="size-4 flex-shrink-0" />
+                    <span>
+                      {ronda.horarioInicio} - {ronda.horarioFim}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {filteredRondas.length === 0 && (
@@ -992,7 +1099,14 @@ export function RoutesManager() {
             <DialogDescription>Visualize todas as informações desta rota de ronda</DialogDescription>
           </DialogHeader>
 
-          {selectedRonda && (
+          {loadingDetails ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600 mx-auto mb-3"></div>
+                <p className="text-gray-600 text-sm">Carregando detalhes...</p>
+              </div>
+            </div>
+          ) : selectedRonda ? (
             <div className="space-y-4">
               <div>
                 <Label className="text-gray-600">Nome da Rota</Label>
@@ -1000,15 +1114,17 @@ export function RoutesManager() {
               </div>
 
               <div>
-                <Label className="text-gray-600">Cliente</Label>
-                <p className="font-medium">{getClienteNome(selectedRonda.idCliente)}</p>
+                <Label className="text-gray-600">Cliente/Empresa</Label>
+                <p className="font-medium">{getRondaEmpresa(selectedRonda)}</p>
               </div>
 
               <div>
                 <Label className="text-gray-600">Tipo</Label>
-                <Badge className={getTipoColor(selectedRonda.tipo)}>
-                  {getTipoLabel(selectedRonda.tipo)}
-                </Badge>
+                <div className="mt-1">
+                  <Badge className={getTipoColor(selectedRonda.tipo)}>
+                    {getTipoLabel(selectedRonda.tipo)}
+                  </Badge>
+                </div>
               </div>
 
               {selectedRonda.horarioInicio && selectedRonda.horarioFim && (
@@ -1020,34 +1136,104 @@ export function RoutesManager() {
                 </div>
               )}
 
-              <div>
-                <Label className="text-gray-600 mb-2 block">
-                  Pontos de Verificação ({selectedRonda.pontos?.length || 0})
-                </Label>
-                <div className="space-y-2">
-                  {selectedRonda.pontos?.map((ponto, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200"
-                    >
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-100 text-primary-700 text-xs font-medium">
-                        {index + 1}
-                      </div>
-                      <div className="flex items-center gap-2 text-primary-600">
-                        {getPontoTypeIcon(ponto.tipo)}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{ponto.nome}</p>
-                        {ponto.latitude && ponto.longitude && (
-                          <p className="text-xs text-gray-400 font-mono">
-                            📍 {ponto.latitude.toFixed(6)}, {ponto.longitude.toFixed(6)}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+              {selectedRonda.diasSemana && selectedRonda.diasSemana.length > 0 && (
+                <div>
+                  <Label className="text-gray-600 mb-2 block">Dias da Semana</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedRonda.diasSemana.map((dia) => {
+                      const diaInfo = daysOfWeekOptions.find((d) => d.value === dia);
+                      return (
+                        <span
+                          key={dia}
+                          className="px-3 py-1 bg-primary-50 text-primary-700 border border-primary-200 rounded-lg text-sm font-medium"
+                        >
+                          {diaInfo?.label || dia}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {(() => {
+                const vigiasIds = getRondaVigias(selectedRonda);
+                return vigiasIds.length > 0 ? (
+                  <div>
+                    <Label className="text-gray-600 mb-2 block">
+                      Vigilantes Responsáveis ({vigiasIds.length})
+                    </Label>
+                    <div className="space-y-2">
+                      {vigiasIds.map((idVigia: number) => {
+                        const vigia = vigias.find((v) => v.idUsuario === idVigia);
+                        return (
+                          <div
+                            key={idVigia}
+                            className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200"
+                          >
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-700 text-sm font-medium">
+                              {vigia ? vigia.nome.charAt(0).toUpperCase() : 'V'}
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">
+                                {vigia ? vigia.nome : `Vigia #${idVigia}`}
+                              </p>
+                              {vigia && (
+                                <p className="text-xs text-gray-500">{vigia.email}</p>
+                              )}
+                            </div>
+                            <UserCheck className="size-4 text-green-600" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null;
+              })()}
+
+              {(() => {
+                const pontos = getRondaPontos(selectedRonda);
+                return (
+                  <div>
+                    <Label className="text-gray-600 mb-2 block">
+                      Pontos de Verificação ({pontos.length || 0})
+                    </Label>
+                    <div className="space-y-2">
+                      {pontos.length > 0 ? (
+                        pontos.map((ponto: any, index: number) => (
+                          <div
+                            key={ponto.idPonto || index}
+                            className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200"
+                          >
+                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-100 text-primary-700 text-xs font-medium">
+                              {ponto.ordem || index + 1}
+                            </div>
+                            <div className="flex items-center gap-2 text-primary-600">
+                              {getPontoTypeIcon(ponto.tipo)}
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">{ponto.nome}</p>
+                              {ponto.latitude && ponto.longitude && (
+                                <p className="text-xs text-gray-400 font-mono">
+                                  📍 {ponto.latitude.toFixed(6)}, {ponto.longitude.toFixed(6)}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-6 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                          <MapPin className="size-6 mx-auto mb-2 text-gray-400" />
+                          <p className="text-sm">Nenhum ponto cadastrado</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>Nenhuma rota selecionada</p>
             </div>
           )}
         </DialogContent>

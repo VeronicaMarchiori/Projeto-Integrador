@@ -5,11 +5,13 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Alert, AlertDescription } from './ui/alert';
+import { useNavigate } from 'react-router-dom';  // ⬅ IMPORTANTE
 
 export function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { signIn } = useAuth();
+  const navigate = useNavigate();  // ⬅ AQUI
 
   const [formData, setFormData] = useState({
     email: '',
@@ -17,24 +19,27 @@ export function AuthPage() {
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  e.preventDefault();
+  setError('');
+  setLoading(true);
 
-    try {
-      const email = formData.email.trim();
-      const password = formData.password.trim();
-      
-      const { error } = await signIn(email, password);
-      if (error) {
-        setError(error);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Ocorreu um erro. Tente novamente.');
-    } finally {
-      setLoading(false);
+  try {
+    const email = formData.email.trim();
+    const password = formData.password.trim();
+    
+    const { error, userType } = await signIn(email, password);
+
+    if (error) {
+      setError(error);
+    } else {
+      window.location.reload();
     }
-  };
+  } catch (err: any) {
+    setError(err.message || 'Ocorreu um erro. Tente novamente.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 p-4">
