@@ -268,13 +268,12 @@ export function RoutesManager() {
     }
 
     try {
-      // Mapear o payload para o formato que o backend espera
       const payload = {
         nome: formData.nome,
-        idEmpresa: formData.idCliente, // Backend espera idEmpresa
-        fk_Empresa_idEmpresa: formData.idCliente, // Campo obrigatório
-        idAdministrador: user.id, // ID do admin logado
-        fk_Administrador_idUsuario: user.id, // Campo obrigatório
+        idEmpresa: formData.idCliente,
+        fk_Empresa_idEmpresa: formData.idCliente,
+        idAdministrador: user.id,
+        fk_Administrador_idUsuario: user.id,
         tipo: formData.tipo,
         horarioInicio: formData.horarioInicio || null,
         horarioFim: formData.horarioFim || null,
@@ -283,7 +282,14 @@ export function RoutesManager() {
         pontos: formData.pontos || [],
       };
 
-      console.log('📤 Enviando payload:', payload);
+      console.log('📤 Enviando payload completo:', payload);
+      console.log('📍 Pontos a serem criados:', payload.pontos);
+      console.log('👥 Vigias a serem associados:', payload.vigias);
+      console.log('📅 Dias da semana:', payload.diasSemana);
+      console.log('🕐 Horários:', {
+        inicio: payload.horarioInicio,
+        fim: payload.horarioFim,
+      });
 
       const response = await fetch(API_RONDAS, {
         method: 'POST',
@@ -293,12 +299,26 @@ export function RoutesManager() {
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('❌ Erro do servidor:', errorData);
         throw new Error(errorData.message || 'Erro ao criar ronda');
       }
 
       const result = await response.json();
+      console.log('✅ Resposta do servidor:', result);
+      console.log('📊 Dados da ronda criada:', result.data);
 
       if (result.success && result.data) {
+        // Verificar se os pontos foram criados
+        const pontosCount = result.data.pontos?.length || result.data.PontosRonda?.length || 0;
+        const vigiasCount = result.data.vigias?.length || result.data.RondaVigias?.length || 0;
+        
+        console.log(`✅ Ronda criada com ${pontosCount} pontos e ${vigiasCount} vigias`);
+        
+        if (pontosCount === 0 && formData.pontos.length > 0) {
+          console.warn('⚠️ AVISO: Pontos foram enviados mas não foram criados no backend!');
+          toast.error('Ronda criada, mas os pontos não foram registrados. Verifique o backend.');
+        }
+        
         setRondas([result.data, ...rondas]);
         toast.success('Ronda criada com sucesso!');
         setDialogOpen(false);
@@ -315,7 +335,7 @@ export function RoutesManager() {
         loadData(); // Recarregar dados
       }
     } catch (error: any) {
-      console.error('Error creating ronda:', error);
+      console.error('❌ Error creating ronda:', error);
       toast.error(error.message || 'Erro ao criar ronda');
     }
   };
