@@ -35,7 +35,7 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 // Configurar express-session
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "sistema_rondas_secret_key_2024",
+    secret: process.env.SESSION_SECRET || "secret_vigilancia_2024",
     resave: false,
     saveUninitialized: false,
     cookie: { 
@@ -194,7 +194,7 @@ const startServer = async () => {
     // Inserir dados iniciais
     await seedDatabase();
 
-    // Iniciar servidor (APENAS UMA VEZ)
+    // Iniciar servidor na porta 
     app.listen(PORT, () => {
       console.log(` Servidor rodando na porta ${PORT}`);
       console.log(` API disponível em: http://localhost:${PORT}`);

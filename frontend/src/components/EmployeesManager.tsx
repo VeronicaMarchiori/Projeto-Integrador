@@ -212,6 +212,7 @@ export function EmployeesManager({
 
       // Usar rota correta baseado no role
       const apiUrl = getApiUrl(formData.role);
+      console.log(JSON.stringify(backendData, null, 2))
 
       const response = await fetch(apiUrl, {
         method: "POST",

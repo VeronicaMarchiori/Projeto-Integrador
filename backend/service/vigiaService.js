@@ -61,6 +61,7 @@ const retornaVigiasDisponiveis = async () => {
 // Função para criar um novo vigia
 const criaVigia = async (vigiaData) => {
   const { nome, email, senha, telefone, cpf, dataNascimento, foto } = vigiaData;
+
   
   try {
     // Validações
@@ -85,8 +86,10 @@ const criaVigia = async (vigiaData) => {
       telefone: telefone || null,
       cpf: cpf || null,
       dataNascimento: dataNascimento || null,
-      status: true, // CORRIGIDO: Mantém como 'status' conforme seu model
+      ativo: true, 
     });
+
+    
 
     // Criar perfil de vigia
     await vigiaRepository.criaVigia({

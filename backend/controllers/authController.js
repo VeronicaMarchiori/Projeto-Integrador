@@ -58,17 +58,6 @@ authRouter.post('/login', async (req, res) => {
       fk_Usuario_idUsuario: usuario.idUsuario,
     });
 
-    // Gerar token JWT
-    const token = jwt.sign(
-      {
-        idUsuario: usuario.idUsuario,
-        email: usuario.email,
-        nome: usuario.nome,
-      },
-      process.env.JWT_SECRET || 'secret_key_default',
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-    );
-
     // Determinar tipo de usuário
     let tipo = 'usuario';
     if (usuario.Administrador) {
@@ -76,6 +65,17 @@ authRouter.post('/login', async (req, res) => {
     } else if (usuario.Vigia) {
       tipo = 'vigia';
     }
+
+    // Gerar token JWT
+    const token = jwt.sign(
+      {
+        idUsuario: usuario.idUsuario,
+        email: usuario.email,
+        nome: usuario.nome,
+      },
+      process.env.JWT_SECRET || 'secret_vigilancia_2024',
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    );
 
     res.json({
       success: true,
@@ -124,7 +124,7 @@ authRouter.get('/me', async (req, res) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key_default');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_vigilancia_2024');
 
     const usuario = await usuarioService.retornaUsuarioPorId(decoded.idUsuario);
 

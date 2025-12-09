@@ -96,7 +96,7 @@ usuarioRouter.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE /usuarios/:id - Deletar usuário
+// DELETE /usuarios/:id - Deletar usuário 
 usuarioRouter.delete('/:id', async (req, res) => {
   try {
     const deleted = await usuarioService.deletaUsuario(req.params.id);
@@ -108,5 +108,6 @@ usuarioRouter.delete('/:id', async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
 
 module.exports = usuarioRouter;

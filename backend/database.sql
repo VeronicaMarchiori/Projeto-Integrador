@@ -221,6 +221,3 @@ VALUES
   ('Sala de Segurança', -23.551120, -46.633908, 'QR004', true),
   ('Perímetro Externo', -23.551320, -46.634108, 'QR005', false)
 ON CONFLICT DO NOTHING;
-
--- MENSAGEM DE SUCESSO
-SELECT 'Banco de dados criado e dados iniciais inseridos com sucesso!' AS status;
